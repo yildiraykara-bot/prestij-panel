@@ -2,100 +2,165 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Prestij Takip Sistemi v18</title>
+<title>Prestij Takip Sistemi v20</title>
 
 <style>
-body{font-family:Arial;background:#f5f7fb;margin:0;padding:20px}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:15px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc}
-button{padding:10px 15px;border:none;border-radius:6px;background:#2d6cdf;color:white;cursor:pointer}
+body{font-family:Arial;background:#f4f7fb;margin:0;padding:20px}
+.card{background:white;padding:20px;border-radius:12px;margin-bottom:15px;box-shadow:0 3px 10px rgba(0,0,0,0.1)}
 h2{margin-top:0}
-.table{width:100%;border-collapse:collapse}
-.table td,.table th{border:1px solid #ddd;padding:6px;text-align:center}
+input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc}
+button{padding:10px;border:none;border-radius:6px;background:#0b5aa8;color:white;cursor:pointer;margin-top:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.small{font-size:13px;color:#666}
+.section{display:none}
+.section.active{display:block}
+.tabs button{margin-right:5px}
 </style>
 
 </head>
 <body>
 
+<div class="tabs">
+<button onclick="show('main')">Ana</button>
+<button onclick="show('weekly')">📊 Haftalık</button>
+<button onclick="show('target')">🎯 Hedef</button>
+</div>
+
+<div id="main" class="section active">
 <div class="card">
 <h2>Deneme Girişi</h2>
 
-<input id="student" placeholder="Öğrenci Adı">
+<input id="student" placeholder="Öğrenci">
 
+<div class="grid">
+<div>
 <h3>Matematik</h3>
-<input id="matD" placeholder="Doğru">
-<input id="matY" placeholder="Yanlış">
-<input id="matTopics" placeholder="Yanlış konular">
+<input id="matD">
+<input id="matY">
+<input id="matT" placeholder="Konular">
+</div>
 
+<div>
 <h3>Türkçe</h3>
-<input id="trD" placeholder="Doğru">
-<input id="trY" placeholder="Yanlış">
-<input id="trTopics" placeholder="Yanlış konular">
+<input id="trD">
+<input id="trY">
+<input id="trT" placeholder="Konular">
+</div>
+</div>
 
 <button onclick="saveExam()">Kaydet</button>
+
 </div>
 
 <div class="card">
 <h2>Analiz</h2>
 <div id="result"></div>
 </div>
+</div>
+
+<div id="weekly" class="section">
+<div class="card">
+<h2>Erken Uyarı</h2>
+<div id="warning"></div>
+</div>
+</div>
+
+<div id="target" class="section">
+<div class="card">
+<h2>Hedef Net</h2>
+<input id="targetStudent" placeholder="Öğrenci">
+<input id="targetNet" placeholder="Hedef">
+<button onclick="saveTarget()">Kaydet</button>
+<div id="targetResult"></div>
+</div>
+</div>
 
 <script>
 
-let exams = []
+let exams=[]
+let targets={}
 
-function net(d,y){
-return d - (y/3)
+function show(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'))
+document.getElementById(id).classList.add('active')
 }
 
-function splitTopics(text,lesson){
-if(!text) return []
-return text.split(",").map(x=>({lesson:lesson,name:x.trim()}))
+function net(d,y){
+return d - y/3
+}
+
+function split(t,l){
+if(!t) return []
+return t.split(",").map(x=>l+"-"+x.trim())
 }
 
 function saveExam(){
 
-let exam={
-student:document.getElementById("student").value,
-matNet:net(+matD.value,+matY.value),
-trNet:net(+trD.value,+trY.value),
+let e={
+student:student.value,
+mat:net(+matD.value,+matY.value),
+tr:net(+trD.value,+trY.value),
 topics:[
-...splitTopics(matTopics.value,"Matematik"),
-...splitTopics(trTopics.value,"Türkçe")
+...split(matT.value,"Mat"),
+...split(trT.value,"Türkçe")
 ]
 }
 
-exams.push(exam)
+exams.push(e)
 
 analyze()
+warningCheck()
+
 }
 
 function analyze(){
 
-let topicCount={}
+let map={}
 
 exams.forEach(e=>{
 e.topics.forEach(t=>{
-let key=t.lesson+"-"+t.name
-topicCount[key]=(topicCount[key]||0)+1
+map[t]=(map[t]||0)+1
 })
 })
 
-let sorted=Object.entries(topicCount).sort((a,b)=>b[1]-a[1])
+let s=Object.entries(map).sort((a,b)=>b[1]-a[1])
 
-let html="<h3>Zayıf Konular</h3>"
+let html="<b>Zayıf Konular</b><br>"
 
-sorted.slice(0,5).forEach(t=>{
-html+=t[0]+" ("+t[1]+")<br>"
+s.slice(0,5).forEach(x=>{
+html+=x[0]+" ("+x[1]+")<br>"
 })
 
-html+="<h3>Çalışma Planı</h3>"
+html+="<br><b>Plan</b><br>"
 
-sorted.slice(0,3).forEach((t,i)=>{
-html+=(i+1)+". "+t[0]+" → konu tekrar + 20 soru<br>"
+s.slice(0,3).forEach((x,i)=>{
+html+=(i+1)+". "+x[0]+" çalış<br>"
 })
 
-document.getElementById("result").innerHTML=html
+result.innerHTML=html
+
+}
+
+function warningCheck(){
+
+let html=""
+
+exams.slice(-3).forEach(e=>{
+if(e.mat<5){
+html+=e.student+" matematik düşük<br>"
+}
+})
+
+warning.innerHTML=html || "Sorun yok"
+
+}
+
+function saveTarget(){
+
+targets[targetStudent.value]=targetNet.value
+
+targetResult.innerHTML="Kaydedildi"
+
 }
 
 </script>
