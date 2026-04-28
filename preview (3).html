@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prestij Takip Sistemi v11</title>
+<style>
+:root{--blue:#063b74;--blue2:#0b5aa8;--red:#d62828;--green:#1f8f4d;--orange:#f08c00;--gold:#d4a017;--bg:#eef3f8;--line:#d9e2ec;--text:#1b2b3a}
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);margin:0;color:var(--text)}
+header{background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;padding:22px;text-align:center}
+header h1{margin:0;font-size:25px} header p{margin:6px 0 0;opacity:.9}
+.container{max-width:1380px;margin:auto;padding:18px}
+.tabs{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin-bottom:14px}
+.tab{background:white;color:var(--blue);border:1px solid var(--line);padding:11px;border-radius:13px;font-weight:bold;cursor:pointer;font-size:13px}
+.tab.active{background:var(--blue2);color:white}
+.card{background:white;padding:18px;border-radius:16px;box-shadow:0 8px 22px rgba(0,0,0,.08);border:1px solid #edf1f6}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;grid-template-columns:390px 1fr;gap:16px;align-items:start}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px}
+.stat{background:white;border-radius:15px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.stat small{color:#65758a}.stat b{display:block;font-size:24px;margin-top:6px}
+label{display:block;font-size:13px;font-weight:bold;margin:10px 0 5px;color:#41556b}
+input,select,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid #cfd9e6;font-size:14px}
+textarea{min-height:150px;font-family:Arial}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{width:100%;padding:12px;border:none;border-radius:11px;font-weight:bold;cursor:pointer;font-size:14px}
+.btn{background:var(--blue2);color:white;margin-top:14px}.btn:hover{background:var(--blue)}
+.btn2{background:#eef4fb;color:var(--blue);margin-top:10px}.btn-danger{background:#fdecec;color:var(--red);margin-top:10px}.btn-green{background:#e8f7ee;color:var(--green);margin-top:10px}
+.notice{background:#fff8e8;border-left:5px solid var(--orange);padding:12px;border-radius:12px;margin-bottom:14px;font-size:14px;line-height:1.5}
+.result{margin-top:15px;padding:13px;border-radius:12px;background:#f5f8fc;line-height:1.6;border-left:5px solid var(--blue2)}
+.toolbar{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:10px;border-bottom:1px solid #edf1f6;text-align:left;vertical-align:middle}
+th{background:#f6f9fd;color:#41556b;font-size:12px}
+.badge{padding:5px 9px;border-radius:999px;font-size:12px;font-weight:bold;display:inline-block;white-space:nowrap}
+.ok{background:#e8f7ee;color:var(--green)}.warn{background:#fff3df;color:var(--orange)}.risk{background:#fdecec;color:var(--red)}
+.blue{color:var(--blue2)}.green{color:var(--green)}.red{color:var(--red)}.orange{color:var(--orange)}.gold{color:var(--gold)}
+.empty{text-align:center;color:#65758a;background:#f7f9fc;border:1px dashed #cfd9e6;border-radius:12px;padding:25px}
+.report-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}.report-box{background:#f7fbff;border:1px solid #e1edf8;border-radius:14px;padding:14px}
+.report-box small{color:#65758a}.report-box b{display:block;font-size:22px;margin-top:5px}
+.comment{background:#f7fbff;border-left:5px solid var(--blue2);padding:14px;border-radius:14px;line-height:1.55;white-space:pre-line}
+.rank1{background:#fff8d6}.rank2{background:#f5f7fa}.rank3{background:#fff0df}
+.bar-row{margin:12px 0}.bar-head{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:5px}.bar-bg{height:14px;background:#edf1f6;border-radius:999px;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,var(--blue2),var(--green));border-radius:999px}.redbar{background:linear-gradient(90deg,#f08c00,#d62828)}
+.hero{background:linear-gradient(135deg,#063b74,#0b5aa8);color:white;border-radius:20px;padding:28px;text-align:center}
+.hero h2{font-size:30px;margin:0 0 10px}.hero p{font-size:16px;line-height:1.55}
+.showcase{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.showcase div{background:rgba(255,255,255,.13);padding:14px;border-radius:15px}
+.mobile-big button,.mobile-big select,.mobile-big input{font-size:18px;padding:16px}
+@media print{header,.tabs,.notice,.stats,.no-print{display:none!important}body{background:white}.container{padding:0;max-width:none}.section{display:none!important}#report.section,#sales.section{display:block!important}.card{box-shadow:none;border:none}}
+@media(max-width:1200px){.tabs{grid-template-columns:repeat(5,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.grid,.grid2{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.showcase{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.tabs,.stats,.report-grid,.toolbar,.showcase{grid-template-columns:1fr}header h1{font-size:21px}table{font-size:12px}th,td{padding:8px 5px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<header><h1>👑 Prestij Takip Sistemi v11</h1><p>Mini test + ödev Excel yükleme + dengeli puan sistemi</p></header>
+<div class="container">
+<div class="notice"><b>v11:</b> Ödevler Excel olarak toplu yüklenebilir. Puan sistemi dengelendi: mini test en fazla 5 puan, ödev en fazla 3 puan verir.</div>
+
+<div class="stats">
+<div class="stat"><small>Öğrenci</small><b class="blue" id="sStudents">0</b></div>
+<div class="stat"><small>Mini Test</small><b class="green" id="sTests">0</b></div>
+<div class="stat"><small>Ödev</small><b class="gold" id="sHomework">0</b></div>
+<div class="stat"><small>Riskli</small><b class="red" id="sRisk">0</b></div>
+<div class="stat"><small>Ort. Başarı</small><b class="orange" id="sAvg">%0</b></div>
+<div class="stat"><small>Acil Alarm</small><b class="red" id="sAlarm">0</b></div>
+</div>
+
+<div class="tabs no-print">
+<button class="tab active" onclick="showTab('students',this)">👥 Öğrenci</button>
+<button class="tab" onclick="showTab('entry',this)">📝 Test</button>
+<button class="tab" onclick="showTab('bulk',this)">📥 Toplu</button>
+<button class="tab" onclick="showTab('homework',this)">📚 Ödev</button>
+<button class="tab" onclick="showTab('coach',this)">🎯 Koç</button>
+<button class="tab" onclick="showTab('study',this)">📅 Etüt</button>
+<button class="tab" onclick="showTab('leaderboard',this)">🏆 Puan</button>
+<button class="tab" onclick="showTab('teacher',this)">👩‍🏫 Öğretmen</button>
+<button class="tab" onclick="showTab('sales',this)">💼 Kayıt</button>
+<button class="tab" onclick="showTab('records',this)">📄 Rapor</button>
+</div>
+
+<section id="students" class="section active">
+<div class="grid">
+<div class="card"><h2>Öğrenci Ekle</h2><label>Ad Soyad</label><input id="studentName" placeholder="Örn: Ayşe Telli"><label>Sınıf</label><input id="studentClass" placeholder="Örn: 8/A"><label>Veli Telefonu</label><input id="parentPhone" placeholder="05xx xxx xx xx"><button class="btn" onclick="addStudent()">Öğrenciyi Kaydet</button><button class="btn2" onclick="addDemoStudents()">Örnek Öğrencileri Ekle</button></div>
+<div class="card"><h2>Öğrenci Listesi</h2><input id="studentSearch" placeholder="Öğrenci ara..." oninput="renderAll()"><div id="studentTable" style="margin-top:12px"></div></div>
+</div>
+</section>
+
+<section id="entry" class="section">
+<div class="grid">
+<div class="card mobile-big"><h2>Mini Test Girişi</h2><label>Öğrenci</label><select id="entryStudent"></select><label>Öğretmen</label><input id="teacher" placeholder="Örn: Sevgi Demirkır"><label>Ders</label><select id="lesson" onchange="fillTopics()"><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><label>Konu</label><select id="topicSelect"></select><input id="topicCustom" placeholder="Listede yoksa özel konu yaz"><div class="row"><div><label>Soru Sayısı</label><input id="total" type="number" value="10" min="1"></div><div><label>Boş</label><input id="blank" type="number" value="0" min="0"></div></div><div class="row"><div><label>Doğru</label><input id="correct" type="number" min="0"></div><div><label>Yanlış</label><input id="wrong" type="number" min="0"></div></div><button class="btn" onclick="saveTest()">Kaydet ve Puan Ver</button><button class="btn2" onclick="fillDemoTest()">Örnek Test Doldur</button><div class="result" id="output">Henüz analiz yapılmadı.</div></div>
+<div class="card"><h2>Son 10 Mini Test</h2><div id="lastTests"></div></div>
+</div>
+</section>
+
+<section id="bulk" class="section">
+<div class="grid">
+<div class="card"><h2>Excel’den Toplu Mini Test Aktarımı</h2><p style="color:#65758a;line-height:1.5">Excel dosyanı seçerek doğrudan yükleyebilirsin. Başlıklar şu şekilde olmalı: <b>Tarih, Öğrenci, Sınıf, Öğretmen, Ders, Konu, Soru, Doğru, Yanlış, Boş</b>.</p><label>Excel Yükle (.xlsx)</label><input type="file" id="excelFile" accept=".xlsx,.xls" onchange="importExcelFile(event)"><button class="btn-green" onclick="importExcelFileFromButton()">Excel Dosyasını Aktar</button><hr style="border:none;border-top:1px solid #edf1f6;margin:16px 0"><p style="color:#65758a;line-height:1.5">Alternatif: Excel’den satırları kopyalayıp aşağıya yapıştırabilirsin.</p><textarea id="bulkText" placeholder="Excel satırlarını buraya yapıştır..."></textarea><button class="btn" onclick="bulkImport()">Yapıştırılan Veriyi Aktar</button><button class="btn2" onclick="fillBulkExample()">Örnek Veri</button><div class="result" id="bulkResult">Henüz aktarım yapılmadı.</div></div>
+<div class="card"><h2>Yedek / Dışa Aktarım</h2><button class="btn-green" onclick="downloadBackup()">Tam Yedek Al (.json)</button><label>Yedekten Geri Yükle</label><input type="file" accept=".json" onchange="restoreBackup(event)"><button class="btn2" onclick="exportCSV()">Mini Testleri CSV / Excel</button><button class="btn2" onclick="exportHomeworkCSV()">Ödevleri CSV / Excel</button></div>
+</div>
+</section>
+
+<section id="homework" class="section">
+<div class="grid">
+<div class="card mobile-big"><h2>Ödev Takibi</h2><label>Öğrenci</label><select id="hwStudent"></select><label>Öğretmen</label><input id="hwTeacher" placeholder="Örn: Ramazan Yılmaz"><label>Ders</label><select id="hwLesson"><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><label>Ödev Durumu</label><select id="hwStatus"><option>Yaptı</option><option>Eksik</option><option>Yapmadı</option><option>Getirmedi</option></select><label>Not</label><input id="hwNote" placeholder="Kısa not"><button class="btn" onclick="saveHomework()">Ödevi Kaydet ve Puan Ver</button></div>
+<div class="card"><h2>Ödev Excel Toplu Yükleme</h2><p style="color:#65758a;line-height:1.5">Excel başlıkları: <b>Tarih, Öğrenci, Sınıf, Öğretmen, Ders, Durum, Not</b>. Durum alanı: Yaptı, Eksik, Yapmadı, Getirmedi.</p><label>Ödev Excel Yükle (.xlsx)</label><input type="file" id="homeworkExcelFile" accept=".xlsx,.xls" onchange="importHomeworkExcelFile(event)"><button class="btn-green" onclick="importHomeworkExcelFileFromButton()">Ödev Excel Dosyasını Aktar</button><div class="result" id="homeworkImportResult">Henüz ödev aktarımı yapılmadı.</div><h2 style="margin-top:18px">Ödev Kaydı</h2><div id="homeworkTable"></div></div>
+</div>
+</section>
+
+<section id="coach" class="section">
+<div class="grid">
+<div class="card"><h2>Koç Paneli</h2><label>Öğrenci</label><select id="coachStudent" onchange="renderCoach()"></select><button class="btn" onclick="renderCoach()">Koç Analizi Oluştur</button></div>
+<div class="card"><h2>Net Artış ve Koç Yorumu</h2><div id="coachArea"></div></div>
+</div>
+</section>
+
+<section id="study" class="section">
+<div class="grid2">
+<div class="card"><h2>Otomatik Etüt Önerileri</h2><div id="studyPlanArea"></div></div>
+<div class="card"><h2>Haftalık Operasyon Notu</h2><div class="comment" id="weeklyOps"></div></div>
+</div>
+</section>
+
+<section id="leaderboard" class="section">
+<div class="grid">
+<div class="card"><h2>Genel Puan Sıralaması</h2><div id="leaderTable"></div></div>
+<div class="card"><h2>Sınıf Bazlı Sıralama</h2><label>Sınıf Seç</label><select id="classRankFilter" onchange="renderLeader()"></select><div id="classLeaderTable"></div><h2>Rozet Sistemi</h2><div id="badgeTable"></div></div>
+</div>
+</section>
+
+<section id="teacher" class="section">
+<div class="grid2">
+<div class="card"><h2>Öğretmen Performansı</h2><div id="teacherTable"></div></div>
+<div class="card"><h2>Risk ve Ödev Alarmı</h2><div id="riskAlarmTable"></div><h3>Ödev Yapmayan / Getirmeyen</h3><div id="badHomeworkTable"></div></div>
+</div>
+</section>
+
+<section id="sales" class="section">
+<div class="card">
+<div class="hero">
+<h2>Prestij Kurs Takip Sistemi</h2>
+<p>Öğrencinin sadece dersini değil; ödevini, mini testini, eksik konusunu, net gelişimini ve risk durumunu düzenli takip eden veri odaklı eğitim sistemi.</p>
+<div class="showcase">
+<div><b id="saleStudents">0</b><br>Takip edilen öğrenci</div>
+<div><b id="saleTests">0</b><br>Mini test verisi</div>
+<div><b id="saleAvg">%0</b><br>Ortalama başarı</div>
+<div><b id="saleRisk">0</b><br>Risk alarmı</div>
+</div>
+</div>
+</div>
+<div class="grid2" style="margin-top:16px">
+<div class="card"><h2>Veli Görüşme Metni</h2><label>Öğrenci</label><select id="salesStudent" onchange="renderSales()"></select><div class="comment" id="salesText"></div><button class="btn2" onclick="copyText('salesText')">Metni Kopyala</button></div>
+<div class="card"><h2>Başarı Vitrini</h2><div id="successShowcase"></div></div>
+</div>
+</section>
+
+<section id="records" class="section">
+<div class="grid">
+<div class="card no-print"><h2>Kayıt Filtreleri</h2><div class="toolbar"><input id="search" placeholder="Öğrenci / konu ara..." oninput="renderAll()"><select id="lessonFilter" onchange="renderAll()"><option value="Tümü">Tüm Dersler</option><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><select id="statusFilter" onchange="renderAll()"><option value="Tümü">Tüm Durumlar</option><option>İyi</option><option>Takip Gerekli</option><option>Riskli</option></select><select id="reportStudent" onchange="renderReport()"></select></div><button class="btn" onclick="window.print()">Seçili Öğrenci Raporunu PDF / Yazdır</button><button class="btn-danger" onclick="clearTests()">Mini Testleri Temizle</button></div>
+<div class="card"><h2>Öğrenci Analiz Raporu</h2><div id="reportArea"></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Tüm Mini Test Kayıtları</h2><div id="testTable"></div></div>
+</section>
+</div>
+
+<script>
+const KEY="prestij_takip_v9";
+let db=loadDB();
+const topics={"Matematik":["Üslü İfadeler","Köklü İfadeler","Çarpanlara Ayırma","Denklemler","Problemler","Üçgenler","Veri Analizi"],"Türkçe":["Paragraf","Sözcükte Anlam","Cümlede Anlam","Fiilimsi","Yazım Kuralları","Noktalama"],"Fen Bilgisi":["DNA ve Genetik Kod","Basınç","Basit Makineler","Enerji Dönüşümleri","Mevsimler ve İklim"],"Sosyal Bilgiler":["İnkılap Tarihi","Atatürk İlkeleri","Kurtuluş Savaşı","Osmanlı","Coğrafya"],"İngilizce":["Vocabulary","Grammar","Reading","Dialogue","Unit Review"]};
+function loadDB(){try{return JSON.parse(localStorage.getItem(KEY))||{students:[],tests:[],homeworks:[]}}catch(e){return{students:[],tests:[],homeworks:[]}}}
+function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){alert("Tarayıcı kayıt izni vermedi. Yedek almayı unutmayın.")}}
+function uid(){return Date.now().toString()+Math.random().toString(36).slice(2)}
+function norm(s){return String(s||"").trim()}
+function showTab(id,btn){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));btn.classList.add("active");renderAll()}
+function findOrCreateStudent(name,className){name=norm(name);className=norm(className)||"-";let s=db.students.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!s){s={id:uid(),name,className,phone:"",createdAt:new Date().toISOString()};db.students.push(s)}return s}
+function addStudent(){const name=norm(studentName.value),className=norm(studentClass.value),phone=norm(parentPhone.value);if(!name){alert("Öğrenci adı giriniz.");return}db.students.push({id:uid(),name,className,phone,createdAt:new Date().toISOString()});saveDB();studentName.value="";parentPhone.value="";renderAll()}
+function addDemoStudents(){[["Ayşe Telli","8/A","0552 000 00 01"],["Murat Çınaroğlu","8/A","0552 000 00 02"],["Ömer Asaf Şimşek","6/A","0552 000 00 03"],["Doruk Bestili","5/A","0552 000 00 04"],["Merve Deniz Türk","7/B","0552 000 00 05"]].forEach(d=>{if(!db.students.some(s=>s.name===d[0]))db.students.push({id:uid(),name:d[0],className:d[1],phone:d[2],createdAt:new Date().toISOString()})});saveDB();renderAll()}
+function deleteStudent(id){if(!confirm("Öğrenci ve tüm kayıtları silinsin mi?"))return;db.students=db.students.filter(s=>s.id!==id);db.tests=db.tests.filter(r=>r.studentId!==id);db.homeworks=db.homeworks.filter(r=>r.studentId!==id);saveDB();renderAll()}
+function fillTopics(){const lesson=document.getElementById("lesson").value;topicSelect.innerHTML=(topics[lesson]||[]).map(t=>`<option>${t}</option>`).join("")}
+function calc(correct,wrong,total){const net=correct-(wrong/3),rate=total>0?(net/total)*100:0;let status="İyi",cls="ok";if(rate<45){status="Riskli";cls="risk"}else if(rate<70){status="Takip Gerekli";cls="warn"}return{net:Number(net.toFixed(2)),rate:Math.round(rate),status,cls}}
+function testPoint(rate){
+  if(rate>=85) return 5;
+  if(rate>=70) return 4;
+  if(rate>=45) return 2;
+  return 1;
+}
+function hwPoint(status){
+  if(status==="Yaptı") return 3;
+  if(status==="Eksik") return 1;
+  return 0;
+}
+function makeTest(student,teacher,lesson,topic,total,correct,wrong,blank,date){const c=calc(correct,wrong,total);return{id:uid(),studentId:student.id,studentName:student.name,className:student.className,teacher:teacher||"Belirtilmedi",lesson,topic,total,correct,wrong,blank,net:c.net,rate:c.rate,status:c.status,cls:c.cls,point:testPoint(c.rate),date:date||new Date().toLocaleDateString("tr-TR"),time:new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}}
+function saveTest(){const student=db.students.find(s=>s.id===entryStudent.value);if(!student){alert("Önce öğrenci ekleyiniz.");return}const teacher=norm(document.getElementById("teacher").value)||"Belirtilmedi",lesson=document.getElementById("lesson").value,topic=norm(topicCustom.value)||topicSelect.value,total=Number(document.getElementById("total").value||10),correct=Number(document.getElementById("correct").value||0),wrong=Number(document.getElementById("wrong").value||0),blank=Number(document.getElementById("blank").value||0);if(correct+wrong+blank>total){alert("Doğru+yanlış+boş, soru sayısını geçemez.");return}const rec=makeTest(student,teacher,lesson,topic,total,correct,wrong,blank);db.tests.unshift(rec);saveDB();output.innerHTML=`<b>${rec.studentName}</b><br>Net: <b>${rec.net}</b> • Başarı: <b>%${rec.rate}</b> • Puan: <b>${rec.point}</b><br><span class="badge ${rec.cls}">${rec.status}</span>`;renderAll()}
+function fillDemoTest(){if(!db.students.length)addDemoStudents();renderSelects();entryStudent.value=db.students[0].id;teacher.value="Sevgi Demirkır";lesson.value="Matematik";fillTopics();topicSelect.value="Üslü İfadeler";total.value=10;correct.value=7;wrong.value=3;blank.value=0}
+function bulkImport(){const text=bulkText.value.trim();if(!text){alert("Veri yapıştırınız.");return}let added=0,skipped=0;text.split(/\n/).forEach(line=>{const p=line.split(/\t|;/).map(x=>x.trim());if(p.length<9){skipped++;return}let [date,name,className,teacher,lesson,topic,total,correct,wrong,blank]=p;if(isNaN(Number(total))){skipped++;return}const student=findOrCreateStudent(name,className);db.tests.unshift(makeTest(student,teacher,lesson||"Matematik",topic||"Konu",Number(total)||10,Number(correct)||0,Number(wrong)||0,Number(blank)||0,date||new Date().toLocaleDateString("tr-TR")));added++});saveDB();bulkResult.innerHTML=`<b>${added}</b> kayıt aktarıldı. <b>${skipped}</b> satır atlandı.`;renderAll()}
+function fillBulkExample(){bulkText.value="29.04.2026\tAyşe Telli\t8/A\tSevgi Demirkır\tMatematik\tÜslü İfadeler\t10\t7\t3\t0\n29.04.2026\tMurat Çınaroğlu\t8/A\tSevgi Demirkır\tMatematik\tÜçgenler\t10\t9\t1\t0\n29.04.2026\tÖmer Asaf Şimşek\t6/A\tRamazan Yılmaz\tTürkçe\tParagraf\t10\t5\t4\t1\n30.04.2026\tAyşe Telli\t8/A\tSevgi Demirkır\tMatematik\tKöklü İfadeler\t10\t3\t6\t1"}
+function saveHomework(){const student=db.students.find(s=>s.id===hwStudent.value);if(!student){alert("Öğrenci yok.");return}const status=hwStatus.value;db.homeworks.unshift({id:uid(),studentId:student.id,studentName:student.name,className:student.className,teacher:norm(hwTeacher.value)||"Belirtilmedi",lesson:hwLesson.value,status,note:norm(hwNote.value),point:hwPoint(status),date:new Date().toLocaleDateString("tr-TR"),time:new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})});saveDB();renderAll()}
+function totalPoints(id){return db.tests.filter(r=>r.studentId===id).reduce((a,r)=>a+r.point,0)+db.homeworks.filter(r=>r.studentId===id).reduce((a,r)=>a+r.point,0)}
+function leaderboard(){return db.students.map(s=>{const tests=db.tests.filter(r=>r.studentId===s.id),hws=db.homeworks.filter(r=>r.studentId===s.id);const point=totalPoints(s.id),avg=tests.length?Math.round(tests.reduce((a,r)=>a+r.rate,0)/tests.length):0;return{...s,point,avg,testCount:tests.length,hwDone:hws.filter(r=>r.status==="Yaptı").length,risk:tests.filter(r=>r.status==="Riskli").length}}).sort((a,b)=>b.point-a.point)}
+function badges(x){let arr=[];if(x.point>=50)arr.push("Haftanın Yıldızı");if(x.hwDone>=3)arr.push("Ödev Kahramanı");if(x.avg>=85)arr.push("Konu Ustası");if(x.testCount>=5)arr.push("Çalışma Disiplini");if(!arr.length)arr.push("Takipte");return arr.join(", ")}
+function riskAlarms(){return db.students.map(s=>{const tests=db.tests.filter(r=>r.studentId===s.id).slice(0,2);return{s,tests}}).filter(x=>x.tests.length>=2&&x.tests.every(t=>t.status==="Riskli"))}
+function renderStats(){const avg=db.tests.length?Math.round(db.tests.reduce((a,r)=>a+r.rate,0)/db.tests.length):0;sStudents.innerText=db.students.length;sTests.innerText=db.tests.length;sHomework.innerText=db.homeworks.length;sRisk.innerText=db.tests.filter(r=>r.status==="Riskli").length;sAvg.innerText="%"+avg;sAlarm.innerText=riskAlarms().length}
+function renderSelects(){const opts=db.students.map(s=>`<option value="${s.id}">${s.name} - ${s.className}</option>`).join("");["entryStudent","hwStudent","reportStudent","coachStudent","salesStudent"].forEach(id=>document.getElementById(id).innerHTML=opts);const classes=[...new Set(db.students.map(s=>s.className).filter(Boolean))];classRankFilter.innerHTML=`<option value="Tümü">Tüm Sınıflar</option>`+classes.map(c=>`<option>${c}</option>`).join("")}
+function renderStudents(){const q=(studentSearch?.value||"").toLowerCase();const list=db.students.filter(s=>s.name.toLowerCase().includes(q));studentTable.innerHTML=list.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Tel</th><th>Test</th><th>Puan</th><th></th></tr></thead><tbody>${list.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.className}</td><td>${s.phone||"-"}</td><td>${db.tests.filter(r=>r.studentId===s.id).length}</td><td>${totalPoints(s.id)}</td><td><button class="btn-danger" onclick="deleteStudent('${s.id}')">Sil</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Henüz öğrenci yok.</div>'}
+function makeTestTable(list){return list.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Konu</th><th>D/Y/B</th><th>Net</th><th>Başarı</th><th>Puan</th><th>Durum</th></tr></thead><tbody>${list.map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b><br><small>${r.className}</small></td><td>${r.teacher}</td><td>${r.lesson}</td><td>${r.topic}</td><td>${r.correct}/${r.wrong}/${r.blank}</td><td><b>${r.net}</b></td><td>%${r.rate}</td><td>${r.point}</td><td><span class="badge ${r.cls}">${r.status}</span></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Kayıt yok.</div>'}
+function renderTests(){const q=(search?.value||"").toLowerCase(),lf=lessonFilter?.value||"Tümü",sf=statusFilter?.value||"Tümü";const list=db.tests.filter(r=>(r.studentName.toLowerCase().includes(q)||r.topic.toLowerCase().includes(q))&&(lf==="Tümü"||r.lesson===lf)&&(sf==="Tümü"||r.status===sf));testTable.innerHTML=makeTestTable(list);lastTests.innerHTML=makeTestTable(db.tests.slice(0,10))}
+function renderHomework(){homeworkTable.innerHTML=db.homeworks.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Durum</th><th>Puan</th><th>Not</th></tr></thead><tbody>${db.homeworks.slice(0,30).map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b></td><td>${r.teacher}</td><td>${r.lesson}</td><td>${r.status}</td><td>${r.point}</td><td>${r.note||"-"}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Ödev kaydı yok.</div>'}
+function renderLeader(){const list=leaderboard();leaderTable.innerHTML=list.length?`<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Sınıf</th><th>Puan</th><th>Ort.</th><th>Test</th><th>Ödev</th></tr></thead><tbody>${list.map((x,i)=>`<tr class="${i==0?'rank1':i==1?'rank2':i==2?'rank3':''}"><td><b>${i+1}</b></td><td><b>${x.name}</b></td><td>${x.className}</td><td><b>${x.point}</b></td><td>%${x.avg}</td><td>${x.testCount}</td><td>${x.hwDone}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Sıralama için veri yok.</div>';const cf=classRankFilter.value||"Tümü";const clist=list.filter(x=>cf==="Tümü"||x.className===cf);classLeaderTable.innerHTML=clist.length?`<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Puan</th><th>Rozet</th></tr></thead><tbody>${clist.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.name}</b></td><td>${x.point}</td><td>${badges(x)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Bu sınıfta veri yok.</div>';badgeTable.innerHTML=list.length?`<table><thead><tr><th>Öğrenci</th><th>Puan</th><th>Rozet</th></tr></thead><tbody>${list.map(x=>`<tr><td><b>${x.name}</b></td><td>${x.point}</td><td>${badges(x)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Rozet için veri yok.</div>'}
+function renderTeacher(){const g={};[...db.tests,...db.homeworks].forEach(r=>{const t=r.teacher||"Belirtilmedi";if(!g[t])g[t]={tests:[],hws:[]}; if(r.topic)g[t].tests.push(r); else g[t].hws.push(r)});const arr=Object.entries(g).map(([name,x])=>{const avg=x.tests.length?Math.round(x.tests.reduce((a,r)=>a+r.rate,0)/x.tests.length):0;return{name,tests:x.tests.length,hws:x.hws.length,avg,risk:x.tests.filter(r=>r.status==="Riskli").length,notDone:x.hws.filter(r=>r.status==="Yapmadı"||r.status==="Getirmedi").length}}).sort((a,b)=>(b.tests+b.hws)-(a.tests+a.hws));teacherTable.innerHTML=arr.length?`<table><thead><tr><th>Öğretmen</th><th>Mini Test</th><th>Ödev</th><th>Ort.</th><th>Risk</th><th>Yapmadı/Getirmedi</th><th>Yorum</th></tr></thead><tbody>${arr.map(x=>`<tr><td><b>${x.name}</b></td><td>${x.tests}</td><td>${x.hws}</td><td>%${x.avg}</td><td>${x.risk}</td><td>${x.notDone}</td><td>${x.tests+x.hws<5?'Takip sayısı artırılmalı.':x.risk>3?'Riskli öğrenciler için ek plan gerekli.':'Takip düzeni olumlu.'}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Öğretmen verisi yok.</div>';const alarms=riskAlarms();riskAlarmTable.innerHTML=alarms.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Son Riskli Konular</th><th>Öneri</th></tr></thead><tbody>${alarms.map(x=>`<tr><td><b>${x.s.name}</b></td><td>${x.s.className}</td><td>${x.tests.map(t=>t.topic).join(", ")}</td><td>Acil tekrar + birebir etüt</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Acil takip alarmı yok.</div>';const bad=db.homeworks.filter(r=>r.status==="Yapmadı"||r.status==="Getirmedi").slice(0,30);badHomeworkTable.innerHTML=bad.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Ders</th><th>Durum</th><th>Öğretmen</th></tr></thead><tbody>${bad.map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b></td><td>${r.lesson}</td><td>${r.status}</td><td>${r.teacher}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Olumsuz ödev kaydı yok.</div>'}
+function studentSummary(id){const s=db.students.find(x=>x.id===id),tests=db.tests.filter(r=>r.studentId===id),hws=db.homeworks.filter(r=>r.studentId===id);const avg=tests.length?Math.round(tests.reduce((a,r)=>a+r.rate,0)/tests.length):0;let weak="-",strong="-";if(tests.length){let g={};tests.forEach(r=>{if(!g[r.topic])g[r.topic]=[];g[r.topic].push(r.rate)});let arr=Object.entries(g).map(([k,v])=>({k,avg:Math.round(v.reduce((a,b)=>a+b,0)/v.length)})).sort((a,b)=>a.avg-b.avg);weak=arr[0].k;strong=arr[arr.length-1].k}return{s,tests,hws,avg,weak,strong,point:totalPoints(id),risk:tests.filter(r=>r.status==="Riskli").length,hwDone:hws.filter(r=>r.status==="Yaptı").length}}
+function renderCoach(){const id=coachStudent.value;const x=studentSummary(id);if(!x.s){coachArea.innerHTML='<div class="empty">Öğrenci seçiniz.</div>';return}const last=x.tests.slice(0,5);let trend="Veri yetersiz";if(last.length>=2){trend=last[0].net>last[last.length-1].net?"Yükseliş eğilimi var":last[0].net<last[last.length-1].net?"Düşüş eğilimi var":"Durağan seyir"}let plan=x.avg<45?`1. ${x.weak} konu tekrarı\n2. 20 soru kontrollü çözüm\n3. Öğretmen birebir kontrol\n4. 48 saat içinde tekrar mini test`:x.avg<70?`1. ${x.weak} pekiştirme testi\n2. Yanlış analizi\n3. Ödev kontrolü sıklaştırma\n4. Haftalık hedef: %70 üstü`: `1. Yeni nesil soru çözümü\n2. Zor seviye test\n3. Deneme hız çalışması\n4. Seviyeyi koruma`;coachArea.innerHTML=`<div class="report-grid"><div class="report-box"><small>Ortalama</small><b>%${x.avg}</b></div><div class="report-box"><small>Trend</small><b>${trend}</b></div><div class="report-box"><small>Zayıf Konu</small><b>${x.weak}</b></div></div><h3>Koç Yorumu</h3><div class="comment">${x.s.name} için mevcut veriler ${x.avg<45?'yakın takip gerektiren':'takip edilebilir'} bir tablo göstermektedir. En kritik alan: ${x.weak}. Güçlü alan: ${x.strong}.\n\nBu hafta yapılacaklar:\n${plan}</div><h3>Son Mini Testler</h3>${makeTestTable(last)}`}
+function renderStudy(){let rows=db.students.map(s=>studentSummary(s.id)).filter(x=>x.tests.length).sort((a,b)=>a.avg-b.avg).slice(0,12);studyPlanArea.innerHTML=rows.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Başarı</th><th>Etüt Konusu</th><th>Öneri</th></tr></thead><tbody>${rows.map(x=>`<tr><td><b>${x.s.name}</b></td><td>${x.s.className}</td><td>%${x.avg}</td><td>${x.weak}</td><td>${x.avg<45?'Acil birebir etüt':x.avg<70?'Küçük grup etüt':'Seviye koruma çalışması'}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Etüt önerisi için test verisi yok.</div>';weeklyOps.innerText=`Bu hafta öncelik düşük başarı ortalamasına sahip öğrencilerde olmalıdır. Riskli öğrenciler için birebir etüt, orta seviyedekiler için küçük grup pekiştirme, iyi seviyedekiler için yeni nesil soru çözümü önerilir. Ödev yapmayan/getirmeyen öğrenciler ayrıca danışman/koç tarafından aranmalıdır.`}
+function renderSales(){saleStudents.innerText=db.students.length;saleTests.innerText=db.tests.length;saleAvg.innerText=sAvg.innerText;saleRisk.innerText=sAlarm.innerText;const x=studentSummary(salesStudent.value);if(!x.s){salesText.innerText="Öğrenci seçiniz.";return}salesText.innerText=`${x.s.name} için sistemimizde mini test, ödev ve konu bazlı takip yapılmaktadır.\n\nMevcut veriye göre ortalama başarı: %${x.avg}.\nÖne çıkan destek alanı: ${x.weak}.\nToplam puan: ${x.point}.\n\nPrestij Kurs’ta öğrenciyi sadece derse almakla kalmıyor; ödevini, mini testini, eksik konusunu ve gelişim yönünü düzenli takip ediyoruz. Bu sayede veli görüşmelerinde tahmine değil, gerçek veriye dayalı konuşuyoruz.`;let top=leaderboard().slice(0,5);successShowcase.innerHTML=top.length?`<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Puan</th><th>Rozet</th></tr></thead><tbody>${top.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.name}</b></td><td>${x.point}</td><td>${badges(x)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Vitrin için veri yok.</div>'}
+function renderReport(){const s=db.students.find(x=>x.id===reportStudent.value),area=reportArea;if(!s){area.innerHTML='<div class="empty">Öğrenci seçiniz.</div>';return}const x=studentSummary(s.id);if(!x.tests.length&&!x.hws.length){area.innerHTML=`<div class="empty">${s.name} için kayıt yok.</div>`;return}const comment=x.avg<45?`${s.name} için yakın takip gereklidir. ${x.weak} konusu öncelikli tekrar listesine alınmalıdır.`:x.avg<70?`${s.name} genel sürece dahildir; ancak ${x.weak} konusunda pekiştirme gerekir.`:`${s.name} iyi bir ilerleme göstermektedir. Düzenli takip korunmalıdır.`;area.innerHTML=`<div class="report-grid"><div class="report-box"><small>Toplam Puan</small><b>${x.point}</b></div><div class="report-box"><small>Ortalama Başarı</small><b>%${x.avg}</b></div><div class="report-box"><small>Mini Test</small><b>${x.tests.length}</b></div><div class="report-box"><small>Riskli Test</small><b>${x.risk}</b></div><div class="report-box"><small>Yapılan Ödev</small><b>${x.hwDone}</b></div><div class="report-box"><small>Öne Çıkan Eksik</small><b>${x.weak}</b></div></div><h3>Veliye Sunulacak Yorum</h3><div class="comment">${comment}</div><h3 style="margin-top:18px">Son Mini Testler</h3>${makeTestTable(x.tests.slice(0,5))}`}
+function clearTests(){if(!confirm("Mini test kayıtları silinsin mi?"))return;db.tests=[];saveDB();renderAll()}
+function copyText(id){navigator.clipboard?.writeText(document.getElementById(id).innerText);alert("Metin kopyalandı.")}
+function downloadBackup(){download("prestij_takip_sistemi_v9_yedek.json",JSON.stringify(db,null,2),"application/json")}
+function restoreBackup(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(!data.students||!data.tests||!data.homeworks)throw new Error();db=data;saveDB();renderAll();alert("Yedek yüklendi.")}catch(err){alert("Yedek dosyası okunamadı.")}};reader.readAsText(file,"UTF-8")}
+function csvEscape(v){return `"${String(v??"").replace(/"/g,'""')}"`}
+function exportCSV(){const rows=[["Tarih","Saat","Öğrenci","Sınıf","Öğretmen","Ders","Konu","Soru","Doğru","Yanlış","Boş","Net","Başarı","Puan","Durum"],...db.tests.map(r=>[r.date,r.time,r.studentName,r.className,r.teacher,r.lesson,r.topic,r.total,r.correct,r.wrong,r.blank,r.net,r.rate,r.point,r.status])];download("mini_test_kayitlari.csv",rows.map(row=>row.map(csvEscape).join(";")).join("\n"),"text/csv;charset=utf-8")}
+function exportHomeworkCSV(){const rows=[["Tarih","Saat","Öğrenci","Sınıf","Öğretmen","Ders","Durum","Puan","Not"],...db.homeworks.map(r=>[r.date,r.time,r.studentName,r.className,r.teacher,r.lesson,r.status,r.point,r.note])];download("odev_kayitlari.csv",rows.map(row=>row.map(csvEscape).join(";")).join("\n"),"text/csv;charset=utf-8")}
+function download(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url)}
+
+function importExcelFileFromButton(){
+  const fileInput = document.getElementById("excelFile");
+  if(!fileInput.files || !fileInput.files[0]){
+    alert("Önce Excel dosyası seçiniz.");
+    return;
+  }
+  importExcelFile({target:fileInput});
+}
+
+function normalizeHeader(h){
+  return String(h||"").toLowerCase()
+    .replaceAll("ı","i").replaceAll("ğ","g").replaceAll("ü","u").replaceAll("ş","s").replaceAll("ö","o").replaceAll("ç","c")
+    .replace(/\s+/g,"").trim();
+}
+
+function getVal(row, keys, fallbackIndex){
+  for(const k of keys){
+    if(row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== "") return row[k];
+  }
+  const vals = Object.values(row);
+  return vals[fallbackIndex] ?? "";
+}
+
+function importExcelFile(event){
+  if(typeof XLSX === "undefined"){
+    alert("Excel okuma kütüphanesi yüklenemedi. İnternet bağlantısı gerekebilir. Alternatif olarak Excel satırlarını kopyalayıp yapıştırma alanını kullanın.");
+    return;
+  }
+
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type:"array"});
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+      let rows = XLSX.utils.sheet_to_json(sheet, {defval:""});
+      if(!rows.length){
+        alert("Excel içinde okunacak satır bulunamadı.");
+        return;
+      }
+
+      let added = 0;
+      let skipped = 0;
+
+      rows.forEach(rawRow => {
+        const row = {};
+        Object.keys(rawRow).forEach(k => row[normalizeHeader(k)] = rawRow[k]);
+
+        const date = getVal(row, ["tarih","date"], 0);
+        const name = norm(getVal(row, ["ogrenci","ogrenciadi","ogrenciadsoyad","adsoyad","isim"], 1));
+        const className = norm(getVal(row, ["sinif","sinifi","sube"], 2));
+        const teacher = norm(getVal(row, ["ogretmen","ogretmenadi"], 3)) || "Belirtilmedi";
+        const lesson = norm(getVal(row, ["ders","brans"], 4)) || "Matematik";
+        const topic = norm(getVal(row, ["konu","kazanim"], 5)) || "Konu";
+        const total = Number(getVal(row, ["soru","sorusayisi","toplamsoru"], 6) || 10);
+        const correct = Number(getVal(row, ["dogru","d"], 7) || 0);
+        const wrong = Number(getVal(row, ["yanlis","yanlış","y"], 8) || 0);
+        const blank = Number(getVal(row, ["bos","boş","b"], 9) || 0);
+
+        if(!name || !total || isNaN(total)){
+          skipped++;
+          return;
+        }
+
+        const student = findOrCreateStudent(name, className);
+        db.tests.unshift(makeTest(student, teacher, lesson, topic, total, correct, wrong, blank, String(date || new Date().toLocaleDateString("tr-TR"))));
+        added++;
+      });
+
+      saveDB();
+      document.getElementById("bulkResult").innerHTML = `<b>${added}</b> Excel kaydı aktarıldı. <b>${skipped}</b> satır atlandı.`;
+      renderAll();
+      alert("Excel aktarımı tamamlandı.");
+    }catch(err){
+      alert("Excel okunamadı. Başlıkları kontrol edin veya kopyala-yapıştır yöntemini kullanın.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+
+
+function importHomeworkExcelFileFromButton(){
+  const fileInput = document.getElementById("homeworkExcelFile");
+  if(!fileInput.files || !fileInput.files[0]){
+    alert("Önce ödev Excel dosyası seçiniz.");
+    return;
+  }
+  importHomeworkExcelFile({target:fileInput});
+}
+
+function importHomeworkExcelFile(event){
+  if(typeof XLSX === "undefined"){
+    alert("Excel okuma kütüphanesi yüklenemedi. İnternet bağlantısı gerekebilir. Alternatif olarak manuel giriş kullanın.");
+    return;
+  }
+
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type:"array"});
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, {defval:""});
+
+      if(!rows.length){
+        alert("Excel içinde okunacak ödev satırı bulunamadı.");
+        return;
+      }
+
+      let added = 0;
+      let skipped = 0;
+
+      rows.forEach(rawRow => {
+        const row = {};
+        Object.keys(rawRow).forEach(k => row[normalizeHeader(k)] = rawRow[k]);
+
+        const date = getVal(row, ["tarih","date"], 0);
+        const name = norm(getVal(row, ["ogrenci","ogrenciadi","ogrenciadsoyad","adsoyad","isim"], 1));
+        const className = norm(getVal(row, ["sinif","sinifi","sube"], 2));
+        const teacher = norm(getVal(row, ["ogretmen","ogretmenadi"], 3)) || "Belirtilmedi";
+        const lesson = norm(getVal(row, ["ders","brans"], 4)) || "Matematik";
+        let status = norm(getVal(row, ["durum","odevdurumu","ödevdurumu"], 5)) || "Yaptı";
+        const note = norm(getVal(row, ["not","aciklama","açıklama"], 6));
+
+        status = status.replace("Yapti","Yaptı").replace("yapti","Yaptı").replace("Eksık","Eksik");
+        const allowed = ["Yaptı","Eksik","Yapmadı","Getirmedi"];
+        if(!allowed.includes(status)){
+          const low = status.toLowerCase();
+          if(low.includes("getirm")) status = "Getirmedi";
+          else if(low.includes("yapma")) status = "Yapmadı";
+          else if(low.includes("eks")) status = "Eksik";
+          else if(low.includes("yap")) status = "Yaptı";
+          else status = "Yaptı";
+        }
+
+        if(!name){
+          skipped++;
+          return;
+        }
+
+        const student = findOrCreateStudent(name, className);
+        db.homeworks.unshift({
+          id: uid(),
+          studentId: student.id,
+          studentName: student.name,
+          className: student.className,
+          teacher,
+          lesson,
+          status,
+          note,
+          point: hwPoint(status),
+          date: String(date || new Date().toLocaleDateString("tr-TR")),
+          time: new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})
+        });
+        added++;
+      });
+
+      saveDB();
+      document.getElementById("homeworkImportResult").innerHTML = `<b>${added}</b> ödev kaydı aktarıldı. <b>${skipped}</b> satır atlandı.`;
+      renderAll();
+      alert("Ödev Excel aktarımı tamamlandı.");
+    }catch(err){
+      alert("Ödev Excel dosyası okunamadı. Başlıkları kontrol edin.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+
+function renderAll(){renderStats();renderSelects();renderStudents();fillTopics();renderTests();renderHomework();renderLeader();renderTeacher();renderCoach();renderStudy();renderSales();renderReport()}
+renderAll();
+</script>
+</body>
+</html>
