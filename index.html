@@ -29,4 +29,76 @@ h2{margin-top:0}
 
 <h3>Türkçe</h3>
 <input id="trD" placeholder="Doğru">
-<input id="trY" placeholder
+<input id="trY" placeholder="Yanlış">
+<input id="trTopics" placeholder="Yanlış konular">
+
+<button onclick="saveExam()">Kaydet</button>
+</div>
+
+<div class="card">
+<h2>Analiz</h2>
+<div id="result"></div>
+</div>
+
+<script>
+
+let exams = []
+
+function net(d,y){
+return d - (y/3)
+}
+
+function splitTopics(text,lesson){
+if(!text) return []
+return text.split(",").map(x=>({lesson:lesson,name:x.trim()}))
+}
+
+function saveExam(){
+
+let exam={
+student:document.getElementById("student").value,
+matNet:net(+matD.value,+matY.value),
+trNet:net(+trD.value,+trY.value),
+topics:[
+...splitTopics(matTopics.value,"Matematik"),
+...splitTopics(trTopics.value,"Türkçe")
+]
+}
+
+exams.push(exam)
+
+analyze()
+}
+
+function analyze(){
+
+let topicCount={}
+
+exams.forEach(e=>{
+e.topics.forEach(t=>{
+let key=t.lesson+"-"+t.name
+topicCount[key]=(topicCount[key]||0)+1
+})
+})
+
+let sorted=Object.entries(topicCount).sort((a,b)=>b[1]-a[1])
+
+let html="<h3>Zayıf Konular</h3>"
+
+sorted.slice(0,5).forEach(t=>{
+html+=t[0]+" ("+t[1]+")<br>"
+})
+
+html+="<h3>Çalışma Planı</h3>"
+
+sorted.slice(0,3).forEach((t,i)=>{
+html+=(i+1)+". "+t[0]+" → konu tekrar + 20 soru<br>"
+})
+
+document.getElementById("result").innerHTML=html
+}
+
+</script>
+
+</body>
+</html>
