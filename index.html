@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v21</title>
+<title>Prestij Takip Sistemi v21.7</title>
 <style>
 :root{--blue:#063b74;--blue2:#0b5aa8;--red:#d62828;--green:#1f8f4d;--orange:#f08c00;--gold:#d4a017;--bg:#eef3f8;--line:#d9e2ec;--text:#1b2b3a}
 *{box-sizing:border-box}
@@ -80,9 +80,9 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<header><h1>👑 Prestij Takip Sistemi v21</h1><p>Full Profesyonel Veli Raporu</p></header>
+<header><h1>👑 Prestij Takip Sistemi v21.7</h1><p>Full Profesyonel Veli Raporu</p></header>
 <div class="container">
-<div class="notice"><b>v21:</b> Full profesyonel veli raporu eklendi. Uzun yorum, ders analizi, deneme konu analizi, ödev özeti ve haftalık plan içerir.</div>
+<div class="notice"><b>v21.7:</b> Öğretmen performans ekranı düzeltildi. Mini test, ödev kontrolü, riskli kayıt ve performans yorumu otomatik hesaplanır.</div>
 
 <div class="stats">
 <div class="stat"><small>Öğrenci</small><b class="blue" id="sStudents">0</b></div>
@@ -106,6 +106,7 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 <button class="tab" onclick="showTab('sales',this)">💼 Kayıt</button>
 <button class="tab" onclick="showTab('whatsapp',this)">📱 WhatsApp</button>
 <button class="tab" onclick="showTab('proReport',this)">👨‍👩‍👧 Pro Veli</button>
+<button class="tab" onclick="showTab('veriBakim',this)">🧹 Veri Bakım</button>
 <button class="tab" onclick="showTab('records',this)">📄 Rapor</button>
 </div>
 
@@ -118,7 +119,32 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 
 <section id="entry" class="section">
 <div class="grid">
-<div class="card mobile-big"><h2>Mini Test Girişi</h2><label>Öğrenci</label><select id="entryStudent"></select><label>Öğretmen</label><input id="teacher" placeholder="Örn: Sevgi Demirkır"><label>Ders</label><select id="lesson" onchange="fillTopics()"><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><label>Konu</label><select id="topicSelect"></select><input id="topicCustom" placeholder="Listede yoksa özel konu yaz"><div class="row"><div><label>Soru Sayısı</label><input id="total" type="number" value="10" min="1"></div><div><label>Boş</label><input id="blank" type="number" value="0" min="0"></div></div><div class="row"><div><label>Doğru</label><input id="correct" type="number" min="0"></div><div><label>Yanlış</label><input id="wrong" type="number" min="0"></div></div><button class="btn" onclick="saveTest()">Kaydet ve Puan Ver</button><button class="btn2" onclick="fillDemoTest()">Örnek Test Doldur</button><div class="result" id="output">Henüz analiz yapılmadı.</div></div>
+<div class="card mobile-big"><h2>Mini Test Girişi</h2><label>Öğrenci</label><select id="entryStudent"></select><label>Öğretmen</label><input id="teacher" placeholder="Örn: Sevgi Demirkır"><label>Ders</label><select id="lesson" onchange="fillTopics()"><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><label>Konu</label>
+<select id="topicSelect" onchange="toggleCustomTopic()">
+  <option>Üslü İfadeler</option>
+  <option>Çarpanlar ve Katlar</option>
+  <option>Kareköklü İfadeler</option>
+  <option>Veri Analizi</option>
+  <option>Olasılık</option>
+  <option>Cebirsel İfadeler</option>
+  <option>Doğrusal Denklemler</option>
+  <option>Eşitsizlikler</option>
+  <option>Üçgenler</option>
+  <option>Çokgenler</option>
+  <option>Geometrik Cisimler</option>
+  <option>Paragraf</option>
+  <option>Sözcükte Anlam</option>
+  <option>Cümlede Anlam</option>
+  <option>Fiilimsi</option>
+  <option>Basınç</option>
+  <option>DNA ve Genetik Kod</option>
+  <option>Mevsimler ve İklim</option>
+  <option>İnkılap Tarihi</option>
+  <option>Vocabulary</option>
+  <option value="custom">+ Özel Konu Gir</option>
+</select>
+<input id="topicCustom" placeholder="Özel konu yaz..." style="display:none;margin-top:6px">
+<label>Soru Sayısı</label><input id="total" type="number" value="10" min="1"></div><div><label>Boş</label><input id="blank" type="number" value="0" min="0"></div></div><div class="row"><div><label>Doğru</label><input id="correct" type="number" min="0"></div><div><label>Yanlış</label><input id="wrong" type="number" min="0"></div></div><button class="btn" onclick="saveTest()">Kaydet ve Puan Ver</button><button class="btn2" onclick="fillDemoTest()">Örnek Test Doldur</button><div class="result" id="output">Henüz analiz yapılmadı.</div></div>
 <div class="card"><h2>Son 10 Mini Test</h2><div id="lastTests"></div></div>
 </div>
 </section>
@@ -212,7 +238,7 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 
 <section id="teacher" class="section">
 <div class="grid2">
-<div class="card"><h2>Öğretmen Performansı</h2><div id="teacherTable"></div></div>
+<div class="card"><h2>Öğretmen Performansı</h2><div id="teacherArea"></div><div id="teacherTable"></div></div>
 <div class="card"><h2>Risk ve Ödev Alarmı</h2><div id="riskAlarmTable"></div><h3>Ödev Yapmayan / Getirmeyen</h3><div id="badHomeworkTable"></div></div>
 </div>
 </section>
@@ -293,6 +319,29 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 </section>
 
 
+
+<section id="veriBakim" class="section">
+<div class="grid2">
+  <div class="card">
+    <h2>Veri Kontrol Paneli</h2>
+    <div id="dataHealthArea"></div>
+    <button class="btn" onclick="renderDataHealth()">Veriyi Yeniden Kontrol Et</button>
+    <button class="btn-green" onclick="downloadBackup()">Temizlemeden Önce Yedek Al</button>
+  </div>
+
+  <div class="card">
+    <h2>Mini Test Temizleme</h2>
+    <p style="line-height:1.6;color:#65758a">
+      Aynı öğrenci, tarih, öğretmen, ders, konu, soru sayısı, doğru, yanlış ve boş bilgileri aynı olan mini testler tekrar kayıt kabul edilir.
+      Bu buton tekrarları siler, tek kaydı bırakır.
+    </p>
+    <button class="btn-danger" onclick="dedupeTestsSafe()">Tekrar Eden Mini Testleri Temizle</button>
+    <button class="btn-danger" onclick="clearTestsSafe()">Tüm Mini Testleri Sil</button>
+  </div>
+</div>
+</section>
+
+
 <section id="records" class="section">
 <div class="grid">
 <div class="card no-print"><h2>Kayıt Filtreleri</h2><div class="toolbar"><input id="search" placeholder="Öğrenci / konu ara..." oninput="renderAll()"><select id="lessonFilter" onchange="renderAll()"><option value="Tümü">Tüm Dersler</option><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><select id="statusFilter" onchange="renderAll()"><option value="Tümü">Tüm Durumlar</option><option>İyi</option><option>Takip Gerekli</option><option>Riskli</option></select><select id="reportStudent" onchange="renderReport()"></select></div><button class="btn" onclick="window.print()">Seçili Öğrenci Raporunu PDF / Yazdır</button><button class="btn-danger" onclick="clearTests()">Mini Testleri Temizle</button></div>
@@ -312,7 +361,7 @@ function uid(){return Date.now().toString()+Math.random().toString(36).slice(2)}
 function norm(s){return String(s||"").trim()}
 function showTab(id,btn){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));btn.classList.add("active");renderAll()}
 function findOrCreateStudent(name,className){name=norm(name);className=norm(className)||"-";let s=db.students.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!s){s={id:uid(),name,className,phone:"",createdAt:new Date().toISOString()};db.students.push(s)}return s}
-function addStudent(){const name=norm(studentName.value),className=norm(studentClass.value),phone=norm(parentPhone.value);if(!name){alert("Öğrenci adı giriniz.");return}db.students.push({id:uid(),name,className,phone,createdAt:new Date().toISOString()});saveDB();studentName.value="";parentPhone.value="";renderAll()}
+function addStudent(){const name=norm(studentName.value),className=normalizeClassName(studentClass.value),phone=norm(parentPhone.value);if(!name){alert("Öğrenci adı giriniz.");return}db.students.push({id:uid(),name,className,phone,createdAt:new Date().toISOString()});saveDB();studentName.value="";parentPhone.value="";renderAll()}
 function addDemoStudents(){[["Ayşe Telli","8/A","0552 000 00 01"],["Murat Çınaroğlu","8/A","0552 000 00 02"],["Ömer Asaf Şimşek","6/A","0552 000 00 03"],["Doruk Bestili","5/A","0552 000 00 04"],["Merve Deniz Türk","7/B","0552 000 00 05"]].forEach(d=>{if(!db.students.some(s=>s.name===d[0]))db.students.push({id:uid(),name:d[0],className:d[1],phone:d[2],createdAt:new Date().toISOString()})});saveDB();renderAll()}
 function deleteStudent(id){if(!confirm("Öğrenci ve tüm kayıtları silinsin mi?"))return;db.students=db.students.filter(s=>s.id!==id);db.tests=db.tests.filter(r=>r.studentId!==id);db.homeworks=db.homeworks.filter(r=>r.studentId!==id);saveDB();renderAll()}
 function fillTopics(){const lesson=document.getElementById("lesson").value;topicSelect.innerHTML=(topics[lesson]||[]).map(t=>`<option>${t}</option>`).join("")}
@@ -329,66 +378,355 @@ function hwPoint(status){
   return 0;
 }
 function makeTest(student,teacher,lesson,topic,total,correct,wrong,blank,date){const c=calc(correct,wrong,total);return{id:uid(),studentId:student.id,studentName:student.name,className:student.className,teacher:teacher||"Belirtilmedi",lesson,topic,total,correct,wrong,blank,net:c.net,rate:c.rate,status:c.status,cls:c.cls,point:testPoint(c.rate),date:date||new Date().toLocaleDateString("tr-TR"),time:new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}}
-function saveTest(){const student=db.students.find(s=>s.id===entryStudent.value);if(!student){alert("Önce öğrenci ekleyiniz.");return}const teacher=norm(document.getElementById("teacher").value)||"Belirtilmedi",lesson=document.getElementById("lesson").value,topic=norm(topicCustom.value)||topicSelect.value,total=Number(document.getElementById("total").value||10),correct=Number(document.getElementById("correct").value||0),wrong=Number(document.getElementById("wrong").value||0),blank=Number(document.getElementById("blank").value||0);if(correct+wrong+blank>total){alert("Doğru+yanlış+boş, soru sayısını geçemez.");return}const rec=makeTest(student,teacher,lesson,topic,total,correct,wrong,blank);db.tests.unshift(rec);saveDB();output.innerHTML=`<b>${rec.studentName}</b><br>Net: <b>${rec.net}</b> • Başarı: <b>%${rec.rate}</b> • Puan: <b>${rec.point}</b><br><span class="badge ${rec.cls}">${rec.status}</span>`;renderAll()}
+function toggleCustomTopic(){
+  const select = document.getElementById("topicSelect");
+  const input = document.getElementById("topicCustom");
+  if(!select || !input) return;
+  if(select.value === "custom"){
+    input.style.display = "block";
+    input.focus();
+  }else{
+    input.style.display = "none";
+    input.value = "";
+  }
+}
+
+function getSelectedTopic(){
+  const select = document.getElementById("topicSelect");
+  const custom = document.getElementById("topicCustom");
+  if(!select) return "Konu";
+  if(select.value === "custom"){
+    return norm(custom?.value) || "Özel Konu";
+  }
+  return select.value;
+}
+
+function saveTest(){
+  if(!db.tests) db.tests = [];
+  const student = db.students.find(s=>s.id===document.getElementById("entryStudent").value);
+  if(!student){
+    alert("Önce öğrenci ekleyiniz veya öğrenci seçiniz.");
+    return;
+  }
+
+  const teacher = norm(document.getElementById("teacher").value) || "Belirtilmedi";
+  const lesson = document.getElementById("lesson").value;
+  const topic = getSelectedTopic();
+  const total = Number(document.getElementById("total").value || 10);
+  const correct = Number(document.getElementById("correct").value || 0);
+  const wrong = Number(document.getElementById("wrong").value || 0);
+  const blank = Number(document.getElementById("blank").value || 0);
+
+  if(correct + wrong + blank > total){
+    alert("Doğru + yanlış + boş, soru sayısını geçemez.");
+    return;
+  }
+
+  const rec = makeTest(student, teacher, lesson, topic, total, correct, wrong, blank);
+  if(!rec.id) rec.id = uid();
+  const added = addTestUnique(rec);
+  if(!added){ alert("Bu mini test zaten kayıtlı görünüyor. Tekrar eklenmedi."); return; }
+  saveDB();
+
+  const out = document.getElementById("output");
+  if(out){
+    out.innerHTML = `<b>${rec.studentName}</b><br>Net: <b>${rec.net}</b> • Başarı: <b>%${rec.rate}</b> • Puan: <b>${rec.point}</b><br><span class="badge ${rec.cls}">${rec.status}</span>`;
+  }
+
+  if(document.getElementById("topicCustom")) document.getElementById("topicCustom").value = "";
+  if(document.getElementById("topicSelect")) document.getElementById("topicSelect").value = "Üslü İfadeler";
+  toggleCustomTopic();
+  renderAll();
+  alert("Mini test kaydı eklendi.");
+}
+
 function fillDemoTest(){if(!db.students.length)addDemoStudents();renderSelects();entryStudent.value=db.students[0].id;teacher.value="Sevgi Demirkır";lesson.value="Matematik";fillTopics();topicSelect.value="Üslü İfadeler";total.value=10;correct.value=7;wrong.value=3;blank.value=0}
 function bulkImport(){const text=bulkText.value.trim();if(!text){alert("Veri yapıştırınız.");return}let added=0,skipped=0;text.split(/\n/).forEach(line=>{const p=line.split(/\t|;/).map(x=>x.trim());if(p.length<9){skipped++;return}let [date,name,className,teacher,lesson,topic,total,correct,wrong,blank]=p;if(isNaN(Number(total))){skipped++;return}const student=findOrCreateStudent(name,className);db.tests.unshift(makeTest(student,teacher,lesson||"Matematik",topic||"Konu",Number(total)||10,Number(correct)||0,Number(wrong)||0,Number(blank)||0,date||new Date().toLocaleDateString("tr-TR")));added++});saveDB();bulkResult.innerHTML=`<b>${added}</b> kayıt aktarıldı. <b>${skipped}</b> satır atlandı.`;renderAll()}
 function fillBulkExample(){bulkText.value="29.04.2026\tAyşe Telli\t8/A\tSevgi Demirkır\tMatematik\tÜslü İfadeler\t10\t7\t3\t0\n29.04.2026\tMurat Çınaroğlu\t8/A\tSevgi Demirkır\tMatematik\tÜçgenler\t10\t9\t1\t0\n29.04.2026\tÖmer Asaf Şimşek\t6/A\tRamazan Yılmaz\tTürkçe\tParagraf\t10\t5\t4\t1\n30.04.2026\tAyşe Telli\t8/A\tSevgi Demirkır\tMatematik\tKöklü İfadeler\t10\t3\t6\t1"}
-function saveHomework(){const student=db.students.find(s=>s.id===hwStudent.value);if(!student){alert("Öğrenci yok.");return}const status=hwStatus.value;db.homeworks.unshift({id:uid(),studentId:student.id,studentName:student.name,className:student.className,teacher:norm(hwTeacher.value)||"Belirtilmedi",lesson:hwLesson.value,status,note:norm(hwNote.value),point:hwPoint(status),date:new Date().toLocaleDateString("tr-TR"),time:new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})});saveDB();renderAll()}
+function saveHomework(){
+  if(!db.homeworks) db.homeworks = [];
+  const studentSelect = document.getElementById("hwStudent");
+  const student = db.students.find(s=>s.id === studentSelect.value);
+  if(!student){
+    alert("Ödev kaydı için önce öğrenci ekleyiniz veya öğrenci seçiniz.");
+    return;
+  }
+
+  const status = document.getElementById("hwStatus").value;
+  const rec = {
+    id: uid(),
+    studentId: student.id,
+    studentName: student.name,
+    className: student.className,
+    teacher: norm(document.getElementById("hwTeacher").value) || "Belirtilmedi",
+    lesson: document.getElementById("hwLesson").value,
+    status,
+    note: norm(document.getElementById("hwNote").value),
+    point: hwPoint(status),
+    date: new Date().toLocaleDateString("tr-TR"),
+    time: new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})
+  };
+
+  db.homeworks.unshift(rec);
+  saveDB();
+
+  document.getElementById("hwNote").value = "";
+  renderAll();
+  alert("Ödev kaydı eklendi.");
+}
+
 function totalPoints(id){return db.tests.filter(r=>r.studentId===id).reduce((a,r)=>a+r.point,0)+db.homeworks.filter(r=>r.studentId===id).reduce((a,r)=>a+r.point,0)}
 function leaderboard(){return db.students.map(s=>{const tests=db.tests.filter(r=>r.studentId===s.id),hws=db.homeworks.filter(r=>r.studentId===s.id);const point=totalPoints(s.id),avg=tests.length?Math.round(tests.reduce((a,r)=>a+r.rate,0)/tests.length):0;return{...s,point,avg,testCount:tests.length,hwDone:hws.filter(r=>r.status==="Yaptı").length,risk:tests.filter(r=>r.status==="Riskli").length}}).sort((a,b)=>b.point-a.point)}
 function badges(x){let arr=[];if(x.point>=50)arr.push("Haftanın Yıldızı");if(x.hwDone>=3)arr.push("Ödev Kahramanı");if(x.avg>=85)arr.push("Konu Ustası");if(x.testCount>=5)arr.push("Çalışma Disiplini");if(!arr.length)arr.push("Takipte");return arr.join(", ")}
 function riskAlarms(){return db.students.map(s=>{const tests=db.tests.filter(r=>r.studentId===s.id).slice(0,2);return{s,tests}}).filter(x=>x.tests.length>=2&&x.tests.every(t=>t.status==="Riskli"))}
 function renderStats(){const avg=db.tests.length?Math.round(db.tests.reduce((a,r)=>a+r.rate,0)/db.tests.length):0;sStudents.innerText=db.students.length;sTests.innerText=db.tests.length;sHomework.innerText=db.homeworks.length;sRisk.innerText=db.tests.filter(r=>r.status==="Riskli").length;sAvg.innerText="%"+avg;sAlarm.innerText=riskAlarms().length}
-function renderSelects(){const opts=db.students.map(s=>`<option value="${s.id}">${s.name} - ${s.className}</option>`).join("");["entryStudent","hwStudent","reportStudent","coachStudent","salesStudent","waStudent","examStudent","proReportStudent"].forEach(id=>document.getElementById(id).innerHTML=opts);const classes=[...new Set(db.students.map(s=>s.className).filter(Boolean))];classRankFilter.innerHTML=`<option value="Tümü">Tüm Sınıflar</option>`+classes.map(c=>`<option>${c}</option>`).join("")}
+
+function normalizeClassName(value){
+  let v = (value || "").toString().trim().toUpperCase();
+  v = v.replace(/\s+/g,"");
+  v = v.replace("SINIF","");
+  v = v.replace(".","");
+  return v;
+}
+
+function getGradeOnly(className){
+  const v = normalizeClassName(className);
+  const m = v.match(/[4-8]/);
+  return m ? m[0] : v;
+}
+
+function getClassOptions(){
+  const base = ["4","5","6","7","8"];
+  const dynamic = db.students.map(s=>normalizeClassName(s.className)).filter(Boolean);
+  return [...new Set([...base, ...dynamic])].sort((a,b)=>{
+    const na = parseInt(a), nb = parseInt(b);
+    if(na !== nb) return na - nb;
+    return a.localeCompare(b, "tr");
+  });
+}
+
+function getSectionOptions(){
+  const dynamic = db.students.map(s=>normalizeClassName(s.className)).filter(Boolean);
+  return [...new Set(dynamic)].sort((a,b)=>{
+    const na = parseInt(a), nb = parseInt(b);
+    if(na !== nb) return na - nb;
+    return a.localeCompare(b, "tr");
+  });
+}
+
+
+function renderSelects(){
+  const opts = db.students.map(s=>`<option value="${s.id}">${s.name} - ${s.className}</option>`).join("");
+  ["entryStudent","hwStudent","reportStudent","coachStudent","salesStudent","waStudent","examStudent","proReportStudent"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = opts;
+  });
+
+  const classFilter = document.getElementById("classRankFilter");
+  if(classFilter){
+    const classes=[...new Set(db.students.map(s=>s.className).filter(Boolean))];
+    classFilter.innerHTML=`<option value="Tümü">Tüm Sınıflar</option>`+classes.map(c=>`<option>${c}</option>`).join("");
+  }
+}
+
 function renderStudents(){const q=(studentSearch?.value||"").toLowerCase();const list=db.students.filter(s=>s.name.toLowerCase().includes(q));studentTable.innerHTML=list.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Tel</th><th>Test</th><th>Puan</th><th></th></tr></thead><tbody>${list.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.className}</td><td>${s.phone||"-"}</td><td>${db.tests.filter(r=>r.studentId===s.id).length}</td><td>${totalPoints(s.id)}</td><td><button class="btn-danger" onclick="deleteStudent('${s.id}')">Sil</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Henüz öğrenci yok.</div>'}
 function makeTestTable(list){
-  return list.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Konu</th><th>D/Y/B</th><th>Net</th><th>Başarı</th><th>Puan</th><th>Durum</th><th>Sil</th></tr></thead><tbody>${list.map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b><br><small>${r.className}</small></td><td>${r.teacher}</td><td>${r.lesson}</td><td>${r.topic}</td><td>${r.correct}/${r.wrong}/${r.blank}</td><td><b>${r.net}</b></td><td>%${r.rate}</td><td>${r.point}</td><td><span class="badge ${r.cls}">${r.status}</span></td><td><button class="xbtn" onclick="deleteTest('${r.id}')">❌</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Kayıt yok.</div>'
+  if(!list || !list.length) return '<div class="empty">Kayıt yok.</div>';
+  return `<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Konu</th><th>D/Y/B</th><th>Net</th><th>Başarı</th><th>Puan</th><th>Durum</th><th>Sil</th></tr></thead><tbody>${list.map(r=>`<tr><td>${r.date||"-"}</td><td><b>${r.studentName||"-"}</b><br><small>${r.className||""}</small></td><td>${r.teacher||"-"}</td><td>${r.lesson||"-"}</td><td>${r.topic||"-"}</td><td>${r.correct||0}/${r.wrong||0}/${r.blank||0}</td><td><b>${r.net||0}</b></td><td>%${r.rate||0}</td><td>${r.point||0}</td><td><span class="badge ${r.cls||"warn"}">${r.status||"-"}</span></td><td><button class="btn-danger" style="padding:6px 9px;width:auto;margin:0" onclick="deleteTest('${r.id}')">❌</button></td></tr>`).join("")}</tbody></table>`;
 }
+
 function renderHomework(){
-  homeworkTable.innerHTML=db.homeworks.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Durum</th><th>Puan</th><th>Not</th><th>Sil</th></tr></thead><tbody>${db.homeworks.slice(0,30).map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b></td><td>${r.teacher}</td><td>${r.lesson}</td><td>${r.status}</td><td>${r.point}</td><td>${r.note||"-"}</td><td><button class="xbtn" onclick="deleteHomework('${r.id}')">❌</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Ödev kaydı yok.</div>'
+  if(!db.homeworks) db.homeworks = [];
+  const el = document.getElementById("homeworkTable");
+  if(!el) return;
+  el.innerHTML = db.homeworks.length ? `<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Durum</th><th>Puan</th><th>Not</th></tr></thead><tbody>${db.homeworks.slice(0,30).map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b></td><td>${r.teacher}</td><td>${r.lesson}</td><td>${r.status}</td><td>${r.point}</td><td>${r.note||"-"}</td></tr>`).join("")}</tbody></table>` : '<div class="empty">Ödev kaydı yok.</div>';
 }
-function renderLeader(){const list=leaderboard();leaderTable.innerHTML=list.length?`<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Sınıf</th><th>Puan</th><th>Ort.</th><th>Test</th><th>Ödev</th></tr></thead><tbody>${list.map((x,i)=>`<tr class="${i==0?'rank1':i==1?'rank2':i==2?'rank3':''}"><td><b>${i+1}</b></td><td><b>${x.name}</b></td><td>${x.className}</td><td><b>${x.point}</b></td><td>%${x.avg}</td><td>${x.testCount}</td><td>${x.hwDone}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Sıralama için veri yok.</div>';const cf=classRankFilter.value||"Tümü";const clist=list.filter(x=>cf==="Tümü"||x.className===cf);classLeaderTable.innerHTML=clist.length?`<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Puan</th><th>Rozet</th></tr></thead><tbody>${clist.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.name}</b></td><td>${x.point}</td><td>${badges(x)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Bu sınıfta veri yok.</div>';badgeTable.innerHTML=list.length?`<table><thead><tr><th>Öğrenci</th><th>Puan</th><th>Rozet</th></tr></thead><tbody>${list.map(x=>`<tr><td><b>${x.name}</b></td><td>${x.point}</td><td>${badges(x)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Rozet için veri yok.</div>'}
-function renderTeacher(){const g={};[...db.tests,...db.homeworks].forEach(r=>{const t=r.teacher||"Belirtilmedi";if(!g[t])g[t]={tests:[],hws:[]}; if(r.topic)g[t].tests.push(r); else g[t].hws.push(r)});const arr=Object.entries(g).map(([name,x])=>{const avg=x.tests.length?Math.round(x.tests.reduce((a,r)=>a+r.rate,0)/x.tests.length):0;return{name,tests:x.tests.length,hws:x.hws.length,avg,risk:x.tests.filter(r=>r.status==="Riskli").length,notDone:x.hws.filter(r=>r.status==="Yapmadı"||r.status==="Getirmedi").length}}).sort((a,b)=>(b.tests+b.hws)-(a.tests+a.hws));teacherTable.innerHTML=arr.length?`<table><thead><tr><th>Öğretmen</th><th>Mini Test</th><th>Ödev</th><th>Ort.</th><th>Risk</th><th>Yapmadı/Getirmedi</th><th>Yorum</th></tr></thead><tbody>${arr.map(x=>`<tr><td><b>${x.name}</b></td><td>${x.tests}</td><td>${x.hws}</td><td>%${x.avg}</td><td>${x.risk}</td><td>${x.notDone}</td><td>${x.tests+x.hws<5?'Takip sayısı artırılmalı.':x.risk>3?'Riskli öğrenciler için ek plan gerekli.':'Takip düzeni olumlu.'}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Öğretmen verisi yok.</div>';const alarms=riskAlarms();riskAlarmTable.innerHTML=alarms.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Son Riskli Konular</th><th>Öneri</th></tr></thead><tbody>${alarms.map(x=>`<tr><td><b>${x.s.name}</b></td><td>${x.s.className}</td><td>${x.tests.map(t=>t.topic).join(", ")}</td><td>Acil tekrar + birebir etüt</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Acil takip alarmı yok.</div>';const bad=db.homeworks.filter(r=>r.status==="Yapmadı"||r.status==="Getirmedi").slice(0,30);badHomeworkTable.innerHTML=bad.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Ders</th><th>Durum</th><th>Öğretmen</th></tr></thead><tbody>${bad.map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b></td><td>${r.lesson}</td><td>${r.status}</td><td>${r.teacher}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Olumsuz ödev kaydı yok.</div>'}
-function studentSummary(id){const s=db.students.find(x=>x.id===id),tests=db.tests.filter(r=>r.studentId===id),hws=db.homeworks.filter(r=>r.studentId===id);const avg=tests.length?Math.round(tests.reduce((a,r)=>a+r.rate,0)/tests.length):0;let weak="-",strong="-";if(tests.length){let g={};tests.forEach(r=>{if(!g[r.topic])g[r.topic]=[];g[r.topic].push(r.rate)});let arr=Object.entries(g).map(([k,v])=>({k,avg:Math.round(v.reduce((a,b)=>a+b,0)/v.length)})).sort((a,b)=>a.avg-b.avg);weak=arr[0].k;strong=arr[arr.length-1].k}return{s,tests,hws,avg,weak,strong,point:totalPoints(id),risk:tests.filter(r=>r.status==="Riskli").length,hwDone:hws.filter(r=>r.status==="Yaptı").length}}
-function getTrendAnalysis(tests){
-  if(!tests || tests.length < 2){
+
+function renderLeader(){
+  const list = db.students.map(s => studentSummary(s.id)).filter(x=>x.s)
+    .sort((a,b)=>b.point-a.point);
+
+  leaderTable.innerHTML = list.length ? `<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Sınıf/Şube</th><th>Puan</th><th>Ort.</th><th>Test</th><th>Ödev</th></tr></thead><tbody>${list.slice(0,20).map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.s.name}</b></td><td>${normalizeClassName(x.s.className)||"-"}</td><td>${x.point}</td><td>%${x.avg}</td><td>${x.tests.length}</td><td>${x.hws.length}</td></tr>`).join("")}</tbody></table>` : '<div class="empty">Öğrenci yok.</div>';
+
+  const classFilter = document.getElementById("classRankFilter");
+  if(classFilter){
+    const current = classFilter.value || "Tümü";
+    const options = getClassOptions();
+    classFilter.innerHTML = `<option value="Tümü">Tüm Sınıflar</option>` + options.map(c=>`<option value="${c}">${c}</option>`).join("");
+    if([...classFilter.options].some(o=>o.value===current)) classFilter.value = current;
+  }
+
+  renderClassRank();
+}
+
+function renderClassRank(){
+  const el = document.getElementById("classRankTable");
+  const filter = document.getElementById("classRankFilter");
+  if(!el || !filter) return;
+
+  const selected = filter.value || "Tümü";
+
+  let list = db.students.map(s=>studentSummary(s.id)).filter(x=>x.s);
+
+  if(selected !== "Tümü"){
+    list = list.filter(x => {
+      const cls = normalizeClassName(x.s.className);
+      return cls === selected || getGradeOnly(cls) === selected;
+    });
+  }
+
+  list = list.sort((a,b)=>b.point-a.point);
+
+  el.innerHTML = list.length ? `<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Sınıf/Şube</th><th>Puan</th><th>Ort.</th><th>Test</th><th>Ödev</th></tr></thead><tbody>${list.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.s.name}</b></td><td>${normalizeClassName(x.s.className)||"-"}</td><td>${x.point}</td><td>%${x.avg}</td><td>${x.tests.length}</td><td>${x.hws.length}</td></tr>`).join("")}</tbody></table>` : '<div class="empty">Bu sınıf/şube için kayıt yok.</div>';
+}
+
+function renderTeacher(){
+  const area = document.getElementById("teacherArea") || document.getElementById("teacherTable") || document.getElementById("teacherPerformance");
+  if(!area) return;
+
+  const teachers = {};
+
+  (db.tests || []).forEach(t=>{
+    const name = (t.teacher || "Belirtilmedi").toString().trim() || "Belirtilmedi";
+    if(!teachers[name]){
+      teachers[name] = {
+        name,
+        testCount:0,
+        rateSum:0,
+        riskCount:0,
+        subjects:{},
+        students:new Set(),
+        topics:{}
+      };
+    }
+
+    teachers[name].testCount++;
+    teachers[name].rateSum += Number(t.rate || 0);
+    if(t.status === "Riskli") teachers[name].riskCount++;
+    teachers[name].students.add(t.studentName || t.studentId || "-");
+    teachers[name].subjects[t.lesson || "Belirtilmedi"] = (teachers[name].subjects[t.lesson || "Belirtilmedi"] || 0) + 1;
+    teachers[name].topics[t.topic || "Belirtilmedi"] = (teachers[name].topics[t.topic || "Belirtilmedi"] || 0) + 1;
+  });
+
+  (db.homeworks || []).forEach(h=>{
+    const name = (h.teacher || "Belirtilmedi").toString().trim() || "Belirtilmedi";
+    if(!teachers[name]){
+      teachers[name] = {
+        name,
+        testCount:0,
+        rateSum:0,
+        riskCount:0,
+        subjects:{},
+        students:new Set(),
+        topics:{}
+      };
+    }
+    teachers[name].homeworkCount = (teachers[name].homeworkCount || 0) + 1;
+    if(h.status === "Yapmadı" || h.status === "Getirmedi"){
+      teachers[name].homeworkProblem = (teachers[name].homeworkProblem || 0) + 1;
+    }
+  });
+
+  const rows = Object.values(teachers).map(t=>{
+    const avg = t.testCount ? Math.round(t.rateSum / t.testCount) : 0;
+    const hw = t.homeworkCount || 0;
+    const hwProblem = t.homeworkProblem || 0;
+
+    let score = 0;
+    score += Math.min(40, t.testCount * 2);
+    score += Math.min(25, hw * 2);
+    score += avg >= 70 ? 20 : avg >= 50 ? 12 : 5;
+    score -= Math.min(20, t.riskCount * 3);
+    score -= Math.min(15, hwProblem * 3);
+    score = Math.max(0, Math.min(100, score));
+
+    let level = "Geliştirilmeli";
+    if(score >= 80) level = "Çok İyi";
+    else if(score >= 60) level = "İyi";
+    else if(score >= 40) level = "Takip Edilmeli";
+
+    const mainSubject = Object.entries(t.subjects).sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
+    const mainTopic = Object.entries(t.topics).sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
+
+    let comment = "";
+    if(t.testCount === 0 && hw === 0){
+      comment = "Bu öğretmen için henüz takip verisi yok.";
+    }else if(score >= 80){
+      comment = "Düzenli takip yapan ve veri girişleri güçlü görünen öğretmen.";
+    }else if(score >= 60){
+      comment = "Genel takip yeterli; riskli öğrencilerde daha sık kontrol önerilir.";
+    }else{
+      comment = "Mini test/ödev kontrol sayısı artırılmalı, riskli öğrenciler daha yakından takip edilmelidir.";
+    }
+
     return {
-      label: "Veri yetersiz",
-      diff: 0,
-      oldAvg: 0,
-      newAvg: tests && tests.length ? tests[0].rate : 0,
-      text: "Trend için en az 2 mini test kaydı gerekir."
+      name:t.name,
+      testCount:t.testCount,
+      avg,
+      riskCount:t.riskCount,
+      hw,
+      hwProblem,
+      studentCount:t.students.size,
+      mainSubject,
+      mainTopic,
+      score,
+      level,
+      comment
     };
+  }).sort((a,b)=>b.score-a.score);
+
+  if(!rows.length){
+    area.innerHTML = '<div class="empty">Öğretmen performansı için veri yok. Mini test veya ödev kaydı girildiğinde burası otomatik oluşur.</div>';
+    return;
   }
 
-  const chronological = [...tests].reverse(); // eskiden yeniye
-  const half = Math.floor(chronological.length / 2);
+  area.innerHTML = `
+    <div class="report-grid">
+      <div class="report-box"><small>Öğretmen Sayısı</small><b>${rows.length}</b></div>
+      <div class="report-box"><small>Toplam Mini Test</small><b>${(db.tests||[]).length}</b></div>
+      <div class="report-box"><small>Toplam Ödev Kontrol</small><b>${(db.homeworks||[]).length}</b></div>
+      <div class="report-box"><small>Riskli Test</small><b>${(db.tests||[]).filter(t=>t.status==="Riskli").length}</b></div>
+    </div>
 
-  let oldPart, newPart;
+    <table>
+      <thead>
+        <tr>
+          <th>Öğretmen</th>
+          <th>Mini Test</th>
+          <th>Ort.</th>
+          <th>Riskli</th>
+          <th>Ödev</th>
+          <th>Ödev Sorunu</th>
+          <th>Öğrenci</th>
+          <th>Ana Ders</th>
+          <th>Skor</th>
+          <th>Durum</th>
+          <th>Yorum</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td><b>${r.name}</b></td>
+            <td>${r.testCount}</td>
+            <td>%${r.avg}</td>
+            <td>${r.riskCount}</td>
+            <td>${r.hw}</td>
+            <td>${r.hwProblem}</td>
+            <td>${r.studentCount}</td>
+            <td>${r.mainSubject}</td>
+            <td><b>${r.score}</b></td>
+            <td><span class="badge ${r.score>=70?'good':r.score>=45?'warn':'bad'}">${r.level}</span></td>
+            <td>${r.comment}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
 
-  if(chronological.length >= 6){
-    oldPart = chronological.slice(0, half);
-    newPart = chronological.slice(half);
-  } else {
-    oldPart = chronological.slice(0, Math.max(1, chronological.length - 2));
-    newPart = chronological.slice(Math.max(1, chronological.length - 2));
-  }
-
-  const oldAvg = Math.round(oldPart.reduce((a,r)=>a+r.rate,0) / oldPart.length);
-  const newAvg = Math.round(newPart.reduce((a,r)=>a+r.rate,0) / newPart.length);
-  const diff = newAvg - oldAvg;
-
-  let label = "Durağan";
-  if(diff >= 5) label = "Yükseliş";
-  else if(diff <= -5) label = "Düşüş";
-
-  return {
-    label,
-    diff,
-    oldAvg,
-    newAvg,
-    text: `Eski ortalama %${oldAvg}, son ortalama %${newAvg}. Net değişim ${diff >= 0 ? "+" : ""}${diff} puan.`
-  };
+    <div class="comment" style="margin-top:14px">
+Öğretmen performans değerlendirmesi; mini test giriş sayısı, ödev kontrol sayısı, riskli öğrenci takibi ve başarı ortalaması dikkate alınarak otomatik oluşturulur. Bu ekran yönetici takibi içindir.
+    </div>
+  `;
 }
 
 function renderCoach(){
@@ -436,7 +774,107 @@ function renderCoach(){
   `;
 }
 
-function renderStudy(){let rows=db.students.map(s=>studentSummary(s.id)).filter(x=>x.tests.length).sort((a,b)=>a.avg-b.avg).slice(0,12);studyPlanArea.innerHTML=rows.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Başarı</th><th>Etüt Konusu</th><th>Öneri</th></tr></thead><tbody>${rows.map(x=>`<tr><td><b>${x.s.name}</b></td><td>${x.s.className}</td><td>%${x.avg}</td><td>${x.weak}</td><td>${x.avg<45?'Acil birebir etüt':x.avg<70?'Küçük grup etüt':'Seviye koruma çalışması'}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Etüt önerisi için test verisi yok.</div>';weeklyOps.innerText=`Bu hafta öncelik düşük başarı ortalamasına sahip öğrencilerde olmalıdır. Riskli öğrenciler için birebir etüt, orta seviyedekiler için küçük grup pekiştirme, iyi seviyedekiler için yeni nesil soru çözümü önerilir. Ödev yapmayan/getirmeyen öğrenciler ayrıca danışman/koç tarafından aranmalıdır.`}
+function renderStudy(){
+  const studyEl = document.getElementById("studyArea");
+  const opEl = document.getElementById("operationNote");
+
+  if(!studyEl && !opEl) return;
+
+  const summaries = db.students.map(s => studentSummary(s.id)).filter(x => x.s);
+
+  const candidates = summaries.map(x => {
+    const weakTopic = x.weak || "-";
+    const riskTests = x.tests.filter(t => t.status === "Riskli").length;
+    const missingHw = x.hws.filter(h => h.status === "Yapmadı" || h.status === "Getirmedi").length;
+    let priority = 0;
+
+    if(x.avg < 45) priority += 4;
+    else if(x.avg < 70) priority += 2;
+
+    if(riskTests > 0) priority += riskTests * 2;
+    if(missingHw > 0) priority += missingHw;
+
+    let level = "Takip";
+    if(priority >= 6) level = "Acil";
+    else if(priority >= 3) level = "Öncelikli";
+
+    let suggestion = "Kısa tekrar + mini test";
+    if(x.avg < 45) suggestion = "Birebir etüt + konu tekrarı + tekrar mini test";
+    else if(x.avg < 70) suggestion = "Küçük grup etüt + pekiştirme testi";
+    if(missingHw >= 2) suggestion += " + ödev tamamlama kontrolü";
+
+    return {
+      name: x.s.name,
+      className: x.s.className || "-",
+      avg: x.avg,
+      weak: weakTopic,
+      riskTests,
+      missingHw,
+      priority,
+      level,
+      suggestion
+    };
+  }).filter(x => x.priority > 0)
+    .sort((a,b) => b.priority - a.priority)
+    .slice(0,20);
+
+  if(studyEl){
+    studyEl.innerHTML = candidates.length ? `
+      <table>
+        <thead>
+          <tr>
+            <th>Öğrenci</th>
+            <th>Sınıf/Şube</th>
+            <th>Ort.</th>
+            <th>Zayıf Konu</th>
+            <th>Riskli Test</th>
+            <th>Ödev Sorunu</th>
+            <th>Öncelik</th>
+            <th>Önerilen Etüt</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${candidates.map(x => `
+            <tr>
+              <td><b>${x.name}</b></td>
+              <td>${normalizeClassName ? normalizeClassName(x.className) : x.className}</td>
+              <td>%${x.avg}</td>
+              <td>${x.weak}</td>
+              <td>${x.riskTests}</td>
+              <td>${x.missingHw}</td>
+              <td><span class="badge ${x.level==="Acil" ? "bad" : "warn"}">${x.level}</span></td>
+              <td>${x.suggestion}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    ` : '<div class="empty">Şu an etüt önerisi oluşturacak riskli öğrenci görünmüyor.</div>';
+  }
+
+  if(opEl){
+    const urgent = candidates.filter(x=>x.level==="Acil").length;
+    const priority = candidates.filter(x=>x.level==="Öncelikli").length;
+    const topTopics = {};
+    candidates.forEach(x=>{
+      if(x.weak && x.weak !== "-") topTopics[x.weak] = (topTopics[x.weak]||0)+1;
+    });
+    const topTopicList = Object.entries(topTopics).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+    opEl.innerHTML = `
+      <div class="report-grid">
+        <div class="report-box"><small>Acil Etüt</small><b>${urgent}</b></div>
+        <div class="report-box"><small>Öncelikli Takip</small><b>${priority}</b></div>
+        <div class="report-box"><small>Toplam Öneri</small><b>${candidates.length}</b></div>
+      </div>
+      <div class="comment">
+Bu hafta etüt planında öncelik; ortalaması düşük, riskli mini test kaydı olan ve ödev sorunu bulunan öğrencilerdedir.
+${topTopicList.length ? "\nEn çok tekrar eden zayıf konular:\n" + topTopicList.map((t,i)=>`${i+1}. ${t[0]} (${t[1]} öğrenci)`).join("\n") : "\nKonu bazlı yoğunlaşma için daha fazla mini test verisi gerekir."}
+      </div>
+    `;
+  }
+}
+
+
 function renderSales(){saleStudents.innerText=db.students.length;saleTests.innerText=db.tests.length;saleAvg.innerText=sAvg.innerText;saleRisk.innerText=sAlarm.innerText;const x=studentSummary(salesStudent.value);if(!x.s){salesText.innerText="Öğrenci seçiniz.";return}salesText.innerText=`${x.s.name} için sistemimizde mini test, ödev ve konu bazlı takip yapılmaktadır.\n\nMevcut veriye göre ortalama başarı: %${x.avg}.\nÖne çıkan destek alanı: ${x.weak}.\nToplam puan: ${x.point}.\n\nPrestij Kurs’ta öğrenciyi sadece derse almakla kalmıyor; ödevini, mini testini, eksik konusunu ve gelişim yönünü düzenli takip ediyoruz. Bu sayede veli görüşmelerinde tahmine değil, gerçek veriye dayalı konuşuyoruz.`;let top=leaderboard().slice(0,5);successShowcase.innerHTML=top.length?`<table><thead><tr><th>Sıra</th><th>Öğrenci</th><th>Puan</th><th>Rozet</th></tr></thead><tbody>${top.map((x,i)=>`<tr><td>${i+1}</td><td><b>${x.name}</b></td><td>${x.point}</td><td>${badges(x)}</td></tr>`).join("")}</tbody></table>`:'<div class="empty">Vitrin için veri yok.</div>'}
 function groupAvgBy(list, field){
   const groups = {};
@@ -1289,10 +1727,12 @@ function importHomeworkExcelFile(event){
 
 function deleteTest(id){
   if(!confirm("Bu mini test kaydı silinsin mi?")) return;
+  if(!db.tests) db.tests = [];
   db.tests = db.tests.filter(r => r.id !== id);
   saveDB();
   renderAll();
 }
+
 
 function deleteHomework(id){
   if(!confirm("Bu ödev kaydı silinsin mi?")) return;
@@ -1309,7 +1749,113 @@ function clearHomeworks(){
   alert("Ödev kayıtları temizlendi.");
 }
 
-function renderAll(){renderStats();renderSelects();renderStudents();fillTopics();renderTests();renderHomework();renderLeader();renderTeacher();renderCoach();renderStudy();renderSales();renderWhatsAppMessage();renderExam();renderProParentReport();renderReport()}
+
+function testFingerprint(r){
+  return [
+    (r.studentId||"").toString().trim(),
+    (r.studentName||"").toString().trim().toUpperCase(),
+    (r.date||"").toString().trim(),
+    (r.teacher||"").toString().trim().toUpperCase(),
+    (r.lesson||"").toString().trim().toUpperCase(),
+    (r.topic||"").toString().trim().toUpperCase(),
+    Number(r.total||0),
+    Number(r.correct||0),
+    Number(r.wrong||0),
+    Number(r.blank||0)
+  ].join("|");
+}
+
+function addTestUnique(rec){
+  if(!db.tests) db.tests = [];
+  const fp = testFingerprint(rec);
+  const exists = db.tests.some(t => testFingerprint(t) === fp);
+  if(exists) return false;
+  db.tests.unshift(rec);
+  return true;
+}
+
+function dedupeTests(){
+  if(!db.tests) db.tests = [];
+  const seen = new Set();
+  const cleaned = [];
+  let removed = 0;
+
+  db.tests.forEach(r=>{
+    const fp = testFingerprint(r);
+    if(seen.has(fp)){
+      removed++;
+    }else{
+      seen.add(fp);
+      cleaned.push(r);
+    }
+  });
+
+  db.tests = cleaned;
+  saveDB();
+  return removed;
+}
+
+function getDuplicateTestCount(){
+  if(!db.tests) return 0;
+  const seen = new Set();
+  let dup = 0;
+  db.tests.forEach(r=>{
+    const fp = testFingerprint(r);
+    if(seen.has(fp)) dup++;
+    else seen.add(fp);
+  });
+  return dup;
+}
+
+function dedupeTestsSafe(){
+  const dup = getDuplicateTestCount();
+  if(dup === 0){
+    alert("Tekrar eden mini test kaydı bulunmadı.");
+    return;
+  }
+  if(!confirm(dup + " tekrar eden mini test kaydı bulundu. Silinsin mi? Önce yedek almanız önerilir.")) return;
+  const removed = dedupeTests();
+  renderAll();
+  alert(removed + " tekrar kayıt temizlendi.");
+}
+
+function clearTestsSafe(){
+  if(!confirm("Tüm mini test kayıtları silinsin mi? Bu işlem geri alınamaz.")) return;
+  if(!confirm("Son onay: Tüm mini testler silinecek. Yedek aldıysanız devam edin.")) return;
+  db.tests = [];
+  saveDB();
+  renderAll();
+  alert("Tüm mini test kayıtları silindi.");
+}
+
+function renderDataHealth(){
+  const el = document.getElementById("dataHealthArea");
+  if(!el) return;
+
+  const testCount = (db.tests||[]).length;
+  const studentCount = (db.students||[]).length;
+  const hwCount = (db.homeworks||[]).length;
+  const examCount = (db.exams||[]).length;
+  const dup = getDuplicateTestCount();
+  const uniqueTest = testCount - dup;
+
+  el.innerHTML = `
+    <div class="report-grid">
+      <div class="report-box"><small>Öğrenci</small><b>${studentCount}</b></div>
+      <div class="report-box"><small>Mini Test</small><b>${testCount}</b></div>
+      <div class="report-box"><small>Benzersiz Mini Test</small><b>${uniqueTest}</b></div>
+      <div class="report-box"><small>Tekrar Eden</small><b>${dup}</b></div>
+      <div class="report-box"><small>Ödev</small><b>${hwCount}</b></div>
+      <div class="report-box"><small>Deneme</small><b>${examCount}</b></div>
+    </div>
+    <div class="comment">
+${dup > 0 ? "Uyarı: Tekrar eden mini test kayıtları var. Analizlerin doğru çıkması için tekilleştirme yapmanız önerilir." : "Veri kontrolü normal görünüyor. Tekrar eden mini test kaydı tespit edilmedi."}
+    </div>
+  `;
+}
+
+
+function renderAll(){renderStats();renderSelects();renderStudents();fillTopics();renderTests();renderHomework();renderLeader();renderTeacher();renderCoach();renderStudy();renderSales();renderWhatsAppMessage();renderExam();renderProParentReport();renderReport();renderDataHealth()}
 renderAll();
 </script>
 </body>
