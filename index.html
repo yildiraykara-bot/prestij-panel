@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v18</title>
+<title>Prestij Takip Sistemi v21</title>
 <style>
 :root{--blue:#063b74;--blue2:#0b5aa8;--red:#d62828;--green:#1f8f4d;--orange:#f08c00;--gold:#d4a017;--bg:#eef3f8;--line:#d9e2ec;--text:#1b2b3a}
 *{box-sizing:border-box}
@@ -62,13 +62,27 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 @media print{header,.tabs,.notice,.stats,.no-print{display:none!important}body{background:white}.container{padding:0;max-width:none}.section{display:none!important}#report.section,#sales.section{display:block!important}.card{box-shadow:none;border:none}}
 @media(max-width:1200px){.tabs{grid-template-columns:repeat(5,1fr)}.stats{grid-template-columns:repeat(3,1fr)}.grid,.grid2{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.showcase{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.tabs,.stats,.report-grid,.toolbar,.showcase,.msg-buttons{grid-template-columns:1fr}header h1{font-size:21px}table{font-size:12px}th,td{padding:8px 5px}}
+
+.pro-report{background:white;border:1px solid #dce8f5;border-radius:22px;padding:24px}
+.pro-head{background:linear-gradient(135deg,#063b74,#0b5aa8);color:white;border-radius:18px;padding:24px;margin-bottom:18px}
+.pro-head h2{margin:0;font-size:28px}
+.pro-sub{opacity:.9;margin-top:8px}
+.pro-section{margin-top:22px}
+.pro-section h3{color:#063b74;border-bottom:2px solid #e1edf8;padding-bottom:8px}
+.pro-comment{background:#f7fbff;border-left:6px solid #0b5aa8;border-radius:14px;padding:16px;line-height:1.65;white-space:pre-line}
+.pro-warning{background:#fff3df;border-left:6px solid #f08c00;border-radius:14px;padding:16px;line-height:1.6}
+.pro-plan{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.pro-plan div{background:#f7fbff;border:1px solid #e1edf8;border-radius:14px;padding:14px;line-height:1.5}
+.pro-sign{margin-top:24px;text-align:right;color:#41556b}
+@media(max-width:650px){.pro-plan{grid-template-columns:1fr}.pro-head h2{font-size:22px}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<header><h1>👑 Prestij Takip Sistemi v18</h1><p>Deneme konu analizi + otomatik çalışma planı</p></header>
+<header><h1>👑 Prestij Takip Sistemi v21</h1><p>Full Profesyonel Veli Raporu</p></header>
 <div class="container">
-<div class="notice"><b>v18:</b> Deneme girişine yanlış konu alanları eklendi. Sistem tekrar eden eksik konuları bulur ve otomatik çalışma planı oluşturur.</div>
+<div class="notice"><b>v21:</b> Full profesyonel veli raporu eklendi. Uzun yorum, ders analizi, deneme konu analizi, ödev özeti ve haftalık plan içerir.</div>
 
 <div class="stats">
 <div class="stat"><small>Öğrenci</small><b class="blue" id="sStudents">0</b></div>
@@ -91,6 +105,7 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 <button class="tab" onclick="showTab('teacher',this)">👩‍🏫 Öğretmen</button>
 <button class="tab" onclick="showTab('sales',this)">💼 Kayıt</button>
 <button class="tab" onclick="showTab('whatsapp',this)">📱 WhatsApp</button>
+<button class="tab" onclick="showTab('proReport',this)">👨‍👩‍👧 Pro Veli</button>
 <button class="tab" onclick="showTab('records',this)">📄 Rapor</button>
 </div>
 
@@ -261,6 +276,23 @@ th{background:#f6f9fd;color:#41556b;font-size:12px}
 </section>
 
 
+
+<section id="proReport" class="section">
+<div class="grid">
+  <div class="card no-print">
+    <h2>Full Profesyonel Veli Raporu</h2>
+    <label>Öğrenci</label>
+    <select id="proReportStudent" onchange="renderProParentReport()"></select>
+    <button class="btn" onclick="window.print()">PDF / Yazdır</button>
+    <button class="btn2" onclick="copyText('proParentReportArea')">Rapor Metnini Kopyala</button>
+  </div>
+  <div class="card">
+    <div id="proParentReportArea"></div>
+  </div>
+</div>
+</section>
+
+
 <section id="records" class="section">
 <div class="grid">
 <div class="card no-print"><h2>Kayıt Filtreleri</h2><div class="toolbar"><input id="search" placeholder="Öğrenci / konu ara..." oninput="renderAll()"><select id="lessonFilter" onchange="renderAll()"><option value="Tümü">Tüm Dersler</option><option>Matematik</option><option>Türkçe</option><option>Fen Bilgisi</option><option>Sosyal Bilgiler</option><option>İngilizce</option></select><select id="statusFilter" onchange="renderAll()"><option value="Tümü">Tüm Durumlar</option><option>İyi</option><option>Takip Gerekli</option><option>Riskli</option></select><select id="reportStudent" onchange="renderReport()"></select></div><button class="btn" onclick="window.print()">Seçili Öğrenci Raporunu PDF / Yazdır</button><button class="btn-danger" onclick="clearTests()">Mini Testleri Temizle</button></div>
@@ -307,7 +339,7 @@ function leaderboard(){return db.students.map(s=>{const tests=db.tests.filter(r=
 function badges(x){let arr=[];if(x.point>=50)arr.push("Haftanın Yıldızı");if(x.hwDone>=3)arr.push("Ödev Kahramanı");if(x.avg>=85)arr.push("Konu Ustası");if(x.testCount>=5)arr.push("Çalışma Disiplini");if(!arr.length)arr.push("Takipte");return arr.join(", ")}
 function riskAlarms(){return db.students.map(s=>{const tests=db.tests.filter(r=>r.studentId===s.id).slice(0,2);return{s,tests}}).filter(x=>x.tests.length>=2&&x.tests.every(t=>t.status==="Riskli"))}
 function renderStats(){const avg=db.tests.length?Math.round(db.tests.reduce((a,r)=>a+r.rate,0)/db.tests.length):0;sStudents.innerText=db.students.length;sTests.innerText=db.tests.length;sHomework.innerText=db.homeworks.length;sRisk.innerText=db.tests.filter(r=>r.status==="Riskli").length;sAvg.innerText="%"+avg;sAlarm.innerText=riskAlarms().length}
-function renderSelects(){const opts=db.students.map(s=>`<option value="${s.id}">${s.name} - ${s.className}</option>`).join("");["entryStudent","hwStudent","reportStudent","coachStudent","salesStudent","waStudent","examStudent"].forEach(id=>document.getElementById(id).innerHTML=opts);const classes=[...new Set(db.students.map(s=>s.className).filter(Boolean))];classRankFilter.innerHTML=`<option value="Tümü">Tüm Sınıflar</option>`+classes.map(c=>`<option>${c}</option>`).join("")}
+function renderSelects(){const opts=db.students.map(s=>`<option value="${s.id}">${s.name} - ${s.className}</option>`).join("");["entryStudent","hwStudent","reportStudent","coachStudent","salesStudent","waStudent","examStudent","proReportStudent"].forEach(id=>document.getElementById(id).innerHTML=opts);const classes=[...new Set(db.students.map(s=>s.className).filter(Boolean))];classRankFilter.innerHTML=`<option value="Tümü">Tüm Sınıflar</option>`+classes.map(c=>`<option>${c}</option>`).join("")}
 function renderStudents(){const q=(studentSearch?.value||"").toLowerCase();const list=db.students.filter(s=>s.name.toLowerCase().includes(q));studentTable.innerHTML=list.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Tel</th><th>Test</th><th>Puan</th><th></th></tr></thead><tbody>${list.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.className}</td><td>${s.phone||"-"}</td><td>${db.tests.filter(r=>r.studentId===s.id).length}</td><td>${totalPoints(s.id)}</td><td><button class="btn-danger" onclick="deleteStudent('${s.id}')">Sil</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Henüz öğrenci yok.</div>'}
 function makeTestTable(list){
   return list.length?`<table><thead><tr><th>Tarih</th><th>Öğrenci</th><th>Öğretmen</th><th>Ders</th><th>Konu</th><th>D/Y/B</th><th>Net</th><th>Başarı</th><th>Puan</th><th>Durum</th><th>Sil</th></tr></thead><tbody>${list.map(r=>`<tr><td>${r.date}</td><td><b>${r.studentName}</b><br><small>${r.className}</small></td><td>${r.teacher}</td><td>${r.lesson}</td><td>${r.topic}</td><td>${r.correct}/${r.wrong}/${r.blank}</td><td><b>${r.net}</b></td><td>%${r.rate}</td><td>${r.point}</td><td><span class="badge ${r.cls}">${r.status}</span></td><td><button class="xbtn" onclick="deleteTest('${r.id}')">❌</button></td></tr>`).join("")}</tbody></table>`:'<div class="empty">Kayıt yok.</div>'
@@ -825,6 +857,167 @@ function renderExam(){
 }
 
 
+
+function proAvgBy(list, field){
+  const g = {};
+  list.forEach(r=>{
+    const k = r[field] || "Belirtilmedi";
+    if(!g[k]) g[k] = [];
+    g[k].push(r.rate);
+  });
+  return Object.entries(g).map(([name,arr])=>({
+    name,
+    avg: Math.round(arr.reduce((a,b)=>a+b,0)/arr.length),
+    count: arr.length
+  })).sort((a,b)=>b.avg-a.avg);
+}
+
+function proBars(data){
+  if(!data || !data.length) return '<div class="empty">Grafik için yeterli veri yok.</div>';
+  return data.map(x=>`
+    <div class="bar-row">
+      <div class="bar-head"><b>${x.name}</b><span>%${x.avg} • ${x.count} kayıt</span></div>
+      <div class="bar-bg"><div class="bar ${x.avg<45?'redbar':''}" style="width:${Math.max(4,Math.min(100,x.avg))}%"></div></div>
+    </div>
+  `).join("");
+}
+
+function proTopicInfo(tests){
+  if(!tests.length) return {weak:"-", weakRate:0, strong:"-", strongRate:0, rows:[]};
+  const rows = proAvgBy(tests, "topic").sort((a,b)=>a.avg-b.avg);
+  return {weak:rows[0].name, weakRate:rows[0].avg, strong:rows[rows.length-1].name, strongRate:rows[rows.length-1].avg, rows};
+}
+
+function proLongComment(s, tests, hws, exams, avg, trend, topicInfo, examTopics){
+  const badHw = hws.filter(r=>r.status==="Yapmadı" || r.status==="Getirmedi").length;
+  const lastExam = exams[0];
+  let level = "";
+  if(avg < 45){
+    level = `${s.name} için mevcut mini test verileri yakın akademik takip gerektiren bir tablo göstermektedir. Öğrencimizin özellikle ${topicInfo.weak} konusunda daha sistemli tekrar, kısa konu anlatımı ve öğretmen kontrolünde soru çözümüne ihtiyacı vardır. Bu aşamada hedef, öğrenciyi zorlayarak değil; küçük kazanımlar üzerinden güven kazandırarak ilerletmektir.`;
+  } else if(avg < 70){
+    level = `${s.name} genel olarak takip edilebilir bir seviyededir; ancak başarıyı kalıcı hale getirmek için bazı konularda pekiştirme gerekmektedir. ${topicInfo.weak} konusu bu hafta öncelikli çalışma alanı olarak görünmektedir. Düzenli mini test ve ödev kontrolü ile öğrencimizin daha istikrarlı bir çizgiye çıkması beklenir.`;
+  } else {
+    level = `${s.name} genel performans olarak olumlu bir çizgi göstermektedir. ${topicInfo.strong} konusu güçlü alan olarak öne çıkarken, ${topicInfo.weak} konusu kısa tekrarlarla desteklenmelidir. Bu seviyede öğrencinin yeni nesil soru çözümü, süre yönetimi ve deneme analiziyle üst seviyeye taşınması hedeflenmelidir.`;
+  }
+
+  let trendText = "";
+  if(trend.label === "Yükseliş"){
+    trendText = `Son ölçümlerde yükseliş eğilimi görülmektedir. Bu olumlu tablo, öğrencimizin uygulanan çalışma planına cevap verdiğini göstermektedir. Bu süreçte istikrarı korumak için haftalık takip aksatılmamalıdır.`;
+  } else if(trend.label === "Düşüş"){
+    trendText = `Son ölçümlerde düşüş eğilimi görülmektedir. Bu durum öğrencinin son dönemde bazı konuları tam pekiştiremediğini veya ödev/tekrar düzeninde aksama yaşadığını gösterebilir. Kısa vadede tekrar testi ve birebir kontrol önerilir.`;
+  } else {
+    trendText = `Gelişim çizgisi şu an durağan görünmektedir. Bu durum öğrencinin mevcut seviyesini koruduğunu gösterebilir; ancak belirgin bir net artışı için hedefli konu çalışmaları yapılmalıdır.`;
+  }
+
+  let examText = "";
+  if(lastExam){
+    examText = `Son deneme toplam neti ${lastExam.totalNet} olarak görünmektedir. Deneme verileri, öğrencinin genel sınav performansını görmek açısından önemlidir. Denemelerde tekrar eden yanlış konular ${examTopics.length ? examTopics.slice(0,3).map(t=>t.name).join(", ") : "henüz yeterli veri olmadığı için netleşmemiştir"}.`;
+  } else {
+    examText = `Deneme kaydı henüz yeterli değildir. Deneme verileri eklendikçe öğrencinin LGS benzeri sınav performansı daha net yorumlanabilecektir.`;
+  }
+
+  let hwText = "";
+  if(!hws.length){
+    hwText = `Ödev takip verisi bulunmadığı için çalışma disiplini hakkında kesin yorum yapılamamaktadır. Bundan sonraki süreçte ödev kontrolünün düzenli işlenmesi önerilir.`;
+  } else if(badHw > 0){
+    hwText = `Ödev takip kayıtlarında ${badHw} olumsuz durum görülmektedir. Ödevlerin yapılmaması, konu kalıcılığını ve mini test başarısını doğrudan etkiler. Bu nedenle evde kısa kontrol ve kurum içinde düzenli takip önerilir.`;
+  } else {
+    hwText = `Ödev takip verileri genel olarak olumlu görünmektedir. Bu düzenin korunması, öğrencinin konuları daha kalıcı öğrenmesine katkı sağlayacaktır.`;
+  }
+
+  return `${level}\n\n${trendText}\n\n${examText}\n\n${hwText}\n\nGenel sonuç olarak ${s.name} için bu haftaki ana hedef; ${topicInfo.weak} konusundaki eksikleri azaltmak, deneme yanlışlarını analiz etmek ve düzenli mini testlerle ilerlemeyi ölçmektir.`;
+}
+
+function renderProParentReport(){
+  const area = document.getElementById("proParentReportArea");
+  if(!area) return;
+  const s = db.students.find(x=>x.id===document.getElementById("proReportStudent")?.value);
+  if(!s){ area.innerHTML = '<div class="empty">Öğrenci seçiniz.</div>'; return; }
+
+  const summary = studentSummary(s.id);
+  const tests = summary.tests || [];
+  const hws = summary.hws || [];
+  const exams = (db.exams||[]).filter(e=>e.studentId===s.id);
+  const avg = summary.avg || 0;
+  const trend = getTrendAnalysis(tests);
+  const topicInfo = proTopicInfo(tests);
+  const lessonData = proAvgBy(tests, "lesson");
+  const examTopics = getExamTopicStats(s.id);
+  const examPlan = buildExamPlan(examTopics);
+  const badHw = hws.filter(r=>r.status==="Yapmadı" || r.status==="Getirmedi").length;
+  const doneHw = hws.filter(r=>r.status==="Yaptı").length;
+  const lastExam = exams[0];
+  const longComment = proLongComment(s, tests, hws, exams, avg, trend, topicInfo, examTopics);
+
+  area.innerHTML = `
+    <div class="pro-report">
+      <div class="pro-head">
+        <h2>Prestij Kurs Profesyonel Öğrenci Gelişim Raporu</h2>
+        <div class="pro-sub"><b>${s.name}</b> • ${s.className || "-"} • Rapor Tarihi: ${new Date().toLocaleDateString("tr-TR")}</div>
+      </div>
+
+      <div class="report-grid">
+        <div class="report-box"><small>Mini Test Ortalaması</small><b>%${avg}</b></div>
+        <div class="report-box"><small>Trend</small><b>${trend.label} (${trend.diff>=0?"+":""}${trend.diff})</b></div>
+        <div class="report-box"><small>Son Deneme Neti</small><b>${lastExam ? lastExam.totalNet : "-"}</b></div>
+        <div class="report-box"><small>En Zayıf Konu</small><b>${topicInfo.weak} (%${topicInfo.weakRate})</b></div>
+        <div class="report-box"><small>En Güçlü Konu</small><b>${topicInfo.strong} (%${topicInfo.strongRate})</b></div>
+        <div class="report-box"><small>Ödev Durumu</small><b>${doneHw} yaptı / ${badHw} sorun</b></div>
+      </div>
+
+      <div class="pro-section">
+        <h3>Genel Akademik Değerlendirme</h3>
+        <div class="pro-comment">${longComment}</div>
+      </div>
+
+      <div class="pro-section">
+        <h3>Ders Bazlı Başarı Grafiği</h3>
+        ${proBars(lessonData)}
+      </div>
+
+      <div class="pro-section">
+        <h3>Konu Bazlı Güçlü ve Desteklenmesi Gereken Alanlar</h3>
+        ${proBars(topicInfo.rows)}
+      </div>
+
+      <div class="pro-section">
+        <h3>Deneme Konu Analizi</h3>
+        ${makeExamTopicTable(s.id)}
+      </div>
+
+      <div class="pro-section">
+        <h3>Bu Hafta Uygulanacak Çalışma Planı</h3>
+        <div class="pro-plan">
+          ${examPlan.map((p,i)=>`<div><b>${i+1}. Adım</b><br>${p}</div>`).join("")}
+        </div>
+      </div>
+
+      <div class="pro-section">
+        <h3>Veliye Özel Not</h3>
+        <div class="pro-warning">
+          Öğrencimizin gelişimi için kurum içi takip kadar evdeki çalışma düzeni de önemlidir. Bu hafta özellikle ${topicInfo.weak} konusu üzerinde kısa tekrar, düzenli ödev ve tekrar mini test yapılması önerilir. Süreç birlikte takip edildiğinde gelişim daha hızlı ve kalıcı olacaktır.
+        </div>
+      </div>
+
+      <div class="pro-section">
+        <h3>Son Deneme Kayıtları</h3>
+        ${makeExamTable(exams.slice(0,5))}
+      </div>
+
+      <div class="pro-section">
+        <h3>Son Mini Test Kayıtları</h3>
+        ${makeTestTable(tests.slice(0,5))}
+      </div>
+
+      <div class="pro-sign">
+        <b>Prestij Kurs Akademik Koordinatörlüğü</b><br>
+        Öğrenci Takip ve Gelişim Sistemi
+      </div>
+    </div>
+  `;
+}
+
+
 function renderReport(){
   const s=db.students.find(x=>x.id===reportStudent.value),area=reportArea;
   if(!s){area.innerHTML='<div class="empty">Öğrenci seçiniz.</div>';return}
@@ -1116,7 +1309,7 @@ function clearHomeworks(){
   alert("Ödev kayıtları temizlendi.");
 }
 
-function renderAll(){renderStats();renderSelects();renderStudents();fillTopics();renderTests();renderHomework();renderLeader();renderTeacher();renderCoach();renderStudy();renderSales();renderWhatsAppMessage();renderExam();renderReport()}
+function renderAll(){renderStats();renderSelects();renderStudents();fillTopics();renderTests();renderHomework();renderLeader();renderTeacher();renderCoach();renderStudy();renderSales();renderWhatsAppMessage();renderExam();renderProParentReport();renderReport()}
 renderAll();
 </script>
 </body>
