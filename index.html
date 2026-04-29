@@ -4,7 +4,85 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prestij Takip Sistemi v23.5 Mini Test Excel Entegre</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+function examDateToTR(v){
+ if(!v) return new Date().toLocaleDateString("tr-TR");
+ if(typeof v==="number"){
+  const d = XLSX.SSF.parse_date_code(v);
+  if(d) return String(d.d).padStart(2,"0")+"."+String(d.m).padStart(2,"0")+"."+d.y;
+ }
+ return v;
+}
+
+function importExams(){
+ const file = document.getElementById("examFile").files[0];
+ if(!file){ alert("Deneme Excel seç"); return; }
+
+ if(document.getElementById("clearBeforeExamImport").checked){
+   db.exams = [];
+ }
+
+ const reader = new FileReader();
+ reader.onload = function(e){
+  const wb = XLSX.read(e.target.result,{type:"array"});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const data = XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+
+  let added=0;
+
+  data.forEach(row=>{
+    if(!row[1] || row[1].toString().toLowerCase().includes("öğrenci")) return;
+
+    let student = db.students.find(s=>s.name.toUpperCase()===row[1].toUpperCase());
+    if(!student){
+      student = {id:uid(), name:row[1], className:(row[2]||"")+(row[3]||""), phone:"", target:0};
+      db.students.push(student);
+    }
+
+    const tr = Number(row[5])||0;
+    const mat = Number(row[6])||0;
+    const fen = Number(row[7])||0;
+    const sos = Number(row[8])||0;
+    const ing = Number(row[9])||0;
+
+    db.exams.unshift({
+      id: uid(),
+      studentId: student.id,
+      studentName: student.name,
+      className: student.className,
+      name: row[4] || "Deneme",
+      date: examDateToTR(row[0]),
+      tr, mat, fen, sos, ing,
+      total: tr+mat+fen+sos+ing
+    });
+
+    added++;
+  });
+
+  saveDB();
+  renderAll();
+  document.getElementById("importExamResult").innerHTML = added + " deneme eklendi";
+ };
+
+ reader.readAsArrayBuffer(file);
+}
+
+function exportExams(){
+ if(!db.exams.length){ alert("Veri yok"); return; }
+
+ const data = [["Öğrenci","Sınıf","Deneme","Tarih","Toplam","Türkçe","Mat","Fen","Sos","İng"]];
+
+ db.exams.forEach(e=>{
+  data.push([e.studentName,e.className,e.name,e.date,e.total,e.tr,e.mat,e.fen,e.sos,e.ing]);
+ });
+
+ const ws = XLSX.utils.aoa_to_sheet(data);
+ const wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, "Denemeler");
+ XLSX.writeFile(wb, "denemeler.xlsx");
+}
+
+</script>
 <style>
 :root{
   --blue:#063b74;--blue2:#0b5aa8;--bg:#eef7ff;--card:#fff;--line:#d7e6f5;
@@ -97,7 +175,18 @@ th{background:#f4f9ff;color:#41556b}
         <div id="studentTable"></div>
       </div>
     </div>
-  </section>
+  
+<div class="card">
+  <h2>Deneme Excel / CSV Aktar</h2>
+  <p>Sütun: A Tarih, B Öğrenci, C Sınıf, D Şube, E Deneme, F Türkçe, G Matematik, H Fen, I Sosyal, J İngilizce</p>
+  <label><input type="checkbox" id="clearBeforeExamImport"> Aktarmadan önce denemeleri sil</label>
+  <input type="file" id="examFile" accept=".xlsx,.xls,.csv">
+  <button class="btn" onclick="importExams()">Deneme Excel Aktar</button>
+  <button class="btn2" onclick="exportExams()">Denemeleri Excel indir</button>
+  <div id="importExamResult" class="result"></div>
+</div>
+
+</section>
 
   <section id="tests" class="section">
     <div class="grid">
@@ -658,6 +747,84 @@ function renderAll(resetTopics=true){
  renderStats();renderSelects();if(resetTopics)fillTopicOptions();renderStudents();renderTests();renderHomework();renderExam();renderAnalysis();renderTeacher();renderReport();renderCare();
 }
 document.addEventListener("DOMContentLoaded",()=>renderAll());
+
+function examDateToTR(v){
+ if(!v) return new Date().toLocaleDateString("tr-TR");
+ if(typeof v==="number"){
+  const d = XLSX.SSF.parse_date_code(v);
+  if(d) return String(d.d).padStart(2,"0")+"."+String(d.m).padStart(2,"0")+"."+d.y;
+ }
+ return v;
+}
+
+function importExams(){
+ const file = document.getElementById("examFile").files[0];
+ if(!file){ alert("Deneme Excel seç"); return; }
+
+ if(document.getElementById("clearBeforeExamImport").checked){
+   db.exams = [];
+ }
+
+ const reader = new FileReader();
+ reader.onload = function(e){
+  const wb = XLSX.read(e.target.result,{type:"array"});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const data = XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+
+  let added=0;
+
+  data.forEach(row=>{
+    if(!row[1] || row[1].toString().toLowerCase().includes("öğrenci")) return;
+
+    let student = db.students.find(s=>s.name.toUpperCase()===row[1].toUpperCase());
+    if(!student){
+      student = {id:uid(), name:row[1], className:(row[2]||"")+(row[3]||""), phone:"", target:0};
+      db.students.push(student);
+    }
+
+    const tr = Number(row[5])||0;
+    const mat = Number(row[6])||0;
+    const fen = Number(row[7])||0;
+    const sos = Number(row[8])||0;
+    const ing = Number(row[9])||0;
+
+    db.exams.unshift({
+      id: uid(),
+      studentId: student.id,
+      studentName: student.name,
+      className: student.className,
+      name: row[4] || "Deneme",
+      date: examDateToTR(row[0]),
+      tr, mat, fen, sos, ing,
+      total: tr+mat+fen+sos+ing
+    });
+
+    added++;
+  });
+
+  saveDB();
+  renderAll();
+  document.getElementById("importExamResult").innerHTML = added + " deneme eklendi";
+ };
+
+ reader.readAsArrayBuffer(file);
+}
+
+function exportExams(){
+ if(!db.exams.length){ alert("Veri yok"); return; }
+
+ const data = [["Öğrenci","Sınıf","Deneme","Tarih","Toplam","Türkçe","Mat","Fen","Sos","İng"]];
+
+ db.exams.forEach(e=>{
+  data.push([e.studentName,e.className,e.name,e.date,e.total,e.tr,e.mat,e.fen,e.sos,e.ing]);
+ });
+
+ const ws = XLSX.utils.aoa_to_sheet(data);
+ const wb = XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb, ws, "Denemeler");
+ XLSX.writeFile(wb, "denemeler.xlsx");
+}
+
 </script>
 </body>
 </html>
