@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v23.4 Mini Test Excel Entegre</title>
+<title>Prestij Takip Sistemi v23.5 Mini Test Excel Entegre</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -53,7 +53,7 @@ th{background:#f4f9ff;color:#41556b}
 </head>
 <body>
 <header>
-  <h1>👑 Prestij Takip Sistemi v23.4 Mini Test Excel Entegre</h1>
+  <h1>👑 Prestij Takip Sistemi v23.5 Mini Test Excel Entegre</h1>
   <p>Kitap2.xlsx mini test verileri sisteme gömülü: 112 öğrenci, 1004 mini test</p>
 </header>
 
@@ -175,6 +175,15 @@ th{background:#f4f9ff;color:#41556b}
         <button class="btn" onclick="importTests()">Mini Test Aktar</button>
         <div id="importTestResult" class="result">Henüz aktarım yok.</div>
       </div>
+      <div class="card">
+        <h2>Ödev Excel / CSV Aktar</h2>
+        <p>Sütun düzeni: A Tarih, B Öğrenci, C Sınıf, D Şube, E Öğretmen, F Ders, G Durum, H Not</p>
+        <label><input type="checkbox" id="clearBeforeHomeworkImport"> Aktarmadan önce mevcut ödevleri sil</label>
+        <input type="file" id="homeworkFile" accept=".xlsx,.xls,.csv">
+        <button class="btn" onclick="importHomeworks()">Ödev Excel Aktar</button>
+        <div id="importHomeworkResult" class="result">Henüz ödev aktarımı yok.</div>
+      </div>
+
       <div class="card">
         <h2>Yedek / Geri Yükleme</h2>
         <button class="btn-green" onclick="downloadBackup()">Yedek Al</button>
@@ -543,6 +552,84 @@ function importTests(){
   saveDB();renderAll();importTestResult.innerHTML=`${added} kayıt eklendi. ${skip} tekrar kayıt atlandı. ${empty} boş/başlık satırı atlandı.`;
  });
 }
+
+function normalizeHomeworkStatus(v){
+ const s = norm(v).toUpperCase().replace("İ","I").replace("ı","I");
+ if(s==="YAPTI") return "Yaptı";
+ if(s==="EKSIK") return "Eksik";
+ if(s==="YAPMADI") return "Yapmadı";
+ if(s==="GETIRMEDI") return "Getirmedi";
+ return norm(v)||"Yaptı";
+}
+function hwDateToTR(v){
+ if(!v) return new Date().toLocaleDateString("tr-TR");
+ if(typeof v==="number"){
+  const d = XLSX.SSF.parse_date_code(v);
+  if(d) return String(d.d).padStart(2,"0")+"."+String(d.m).padStart(2,"0")+"."+d.y;
+ }
+ return norm(v) || new Date().toLocaleDateString("tr-TR");
+}
+function importHomeworks(){
+ const file = document.getElementById("homeworkFile")?.files?.[0];
+ if(!file){ alert("Ödev Excel dosyası seçiniz."); return; }
+ if(document.getElementById("clearBeforeHomeworkImport")?.checked) db.homeworks = [];
+
+ const reader = new FileReader();
+ reader.onload = e => {
+  try{
+   const wb = XLSX.read(e.target.result,{type:"array"});
+   const ws = wb.Sheets[wb.SheetNames[0]];
+   const aoa = XLSX.utils.sheet_to_json(ws,{header:1,defval:"",blankrows:false});
+
+   let added=0, skipped=0;
+
+   aoa.forEach((row)=>{
+    const joined = row.map(x=>norm(x).toLowerCase()).join(" ");
+    if(!joined.trim()){ skipped++; return; }
+    if(joined.includes("öğrenci") || joined.includes("ogrenci") || joined.includes("durum")){ skipped++; return; }
+
+    const date = hwDateToTR(row[0]);
+    const studentName = norm(row[1]);
+    if(!studentName){ skipped++; return; }
+
+    const className = cls((row[2]||"") + (row[3]||""));
+    const teacher = norm(row[4]) || "Belirtilmedi";
+    const lesson = norm(row[5]) || "Matematik";
+    const status = normalizeHomeworkStatus(row[6]);
+    const note = norm(row[7]);
+
+    let st = db.students.find(s => s.name.toUpperCase() === studentName.toUpperCase() && (!className || s.className === className));
+    if(!st){
+      st = {id:uid(), name:studentName, className, phone:"", target:0};
+      db.students.push(st);
+    }
+
+    db.homeworks.unshift({
+      id:uid(),
+      studentId:st.id,
+      studentName:st.name,
+      className:st.className,
+      teacher,
+      lesson,
+      status,
+      note,
+      point:hwPoint(status),
+      date
+    });
+    added++;
+   });
+
+   saveDB();
+   renderAll();
+   document.getElementById("importHomeworkResult").innerHTML = `${added} ödev kaydı eklendi. ${skipped} satır atlandı.`;
+  }catch(err){
+   alert("Ödev Excel okunamadı. Dosyayı kapatıp tekrar deneyin.");
+  }
+ };
+ reader.readAsArrayBuffer(file);
+}
+
+
 /* Care */
 function repairAllTests(){
  db.tests=db.tests.map(t=>{const s=calcScore(t.total,t.correct,t.wrong,t.blank);return {...t,...s,badge:s.badge}});
