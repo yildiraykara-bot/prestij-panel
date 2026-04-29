@@ -3,8 +3,80 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v24.1 Mini Test Excel Entegre</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<title>Prestij Takip Sistemi v24.2 Mini Test Excel Entegre</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+function safeStudentClassName(clsVal, branchVal){
+  const c = (clsVal || "").toString().trim().toUpperCase().replace(/\s+/g,"");
+  const b = (branchVal || "").toString().trim().toUpperCase().replace(/\s+/g,"");
+  if(!c) return b || "";
+  if(/[A-ZÇĞİÖŞÜ]$/.test(c)) return c;
+  return c + b;
+}
+
+function safeAddStudent(){
+  const name = (document.getElementById("safeStudentName")?.value || "").trim();
+  const className = safeStudentClassName(
+    document.getElementById("safeStudentClass")?.value,
+    document.getElementById("safeStudentBranch")?.value
+  );
+  const phone = (document.getElementById("safeStudentPhone")?.value || "").trim();
+
+  if(!name){
+    alert("Ad soyad giriniz.");
+    return;
+  }
+
+  if(!db.students) db.students = [];
+
+  const exists = db.students.find(s =>
+    (s.name || "").toUpperCase() === name.toUpperCase() &&
+    (s.className || "") === className
+  );
+
+  if(exists){
+    alert("Bu öğrenci zaten kayıtlı.");
+    return;
+  }
+
+  db.students.push({
+    id: uid(),
+    name: name,
+    className: className,
+    phone: phone,
+    target: 0
+  });
+
+  saveDB();
+
+  if(typeof renderAll === "function") renderAll();
+
+  const res = document.getElementById("safeStudentResult");
+  if(res) res.innerHTML = "✔ Öğrenci kaydedildi.";
+
+  ["safeStudentName","safeStudentClass","safeStudentBranch","safeStudentPhone"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+}
+
+function safeExportStudents(){
+  if(typeof XLSX === "undefined"){
+    alert("Excel modülü yüklenemedi. Sayfayı yenileyin.");
+    return;
+  }
+
+  const data = [["Öğrenci","Sınıf/Şube","Telefon"]];
+  (db.students || []).forEach(s=>{
+    data.push([s.name || "", s.className || "", s.phone || ""]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Öğrenciler");
+  XLSX.writeFile(wb, "prestij_ogrenci_listesi.xlsx");
+}
+
+</script>
 <style>
 :root{
   --blue:#063b74;--blue2:#0b5aa8;--bg:#eef7ff;--card:#fff;--line:#d7e6f5;
@@ -76,7 +148,7 @@ th{background:#f4f9ff;color:#41556b}
 </head>
 <body>
 <header>
-  <h1>👑 Prestij Takip Sistemi v24.1 Mini Test Excel Entegre</h1>
+  <h1>👑 Prestij Takip Sistemi v24.2 Mini Test Excel Entegre</h1>
   <p>Kitap2.xlsx mini test verileri sisteme gömülü: 112 öğrenci, 1004 mini test</p>
 </header>
 
@@ -103,69 +175,55 @@ th{background:#f4f9ff;color:#41556b}
     <button class="tab" onclick="showTab('care',this)">🧹 Bakım</button>
   </div>
 
-  
-<section id="students" class="section active">
-  <div class="grid">
-    <div class="card">
-      <h2>Yeni Öğrenci Kaydı</h2>
+  <section id="students" class="section active">
 
+<div class="card">
+  <h2>Stabil Öğrenci Kayıt Modülü</h2>
+  <p>Bu bölüm eski fonksiyonlara dokunmadan öğrenci ekler.</p>
+
+  <div class="grid2">
+    <div>
       <label>Ad Soyad</label>
-      <input id="studentName" placeholder="Örn: Ahmet Yılmaz">
-
-      <div class="grid2">
-        <div>
-          <label>Sınıf</label>
-          <input id="studentClass" placeholder="Örn: 7">
-        </div>
-        <div>
-          <label>Şube</label>
-          <input id="studentBranch" placeholder="Örn: A">
-        </div>
-      </div>
-
+      <input id="safeStudentName" placeholder="Örn: Ahmet Yılmaz">
+    </div>
+    <div>
+      <label>Sınıf</label>
+      <input id="safeStudentClass" placeholder="Örn: 7">
+    </div>
+    <div>
+      <label>Şube</label>
+      <input id="safeStudentBranch" placeholder="Örn: A">
+    </div>
+    <div>
       <label>Veli Telefonu</label>
-      <input id="studentPhone" placeholder="05xx xxx xx xx">
-
-      <label>Hedef Net</label>
-      <input id="studentTarget" type="number" placeholder="Örn: 70">
-
-      <button class="btn" onclick="addStudent()">Öğrenciyi Kaydet</button>
-      <button class="btn2" onclick="clearStudentForm()">Formu Temizle</button>
-
-      <div id="studentAddResult" class="result">Henüz işlem yapılmadı.</div>
-    </div>
-
-    <div class="card">
-      <h2>Öğrenci Listesi</h2>
-
-      <div class="grid2">
-        <div>
-          <label>Öğrenci Ara</label>
-          <input id="studentSearch" placeholder="Ad, soyad, sınıf ara..." oninput="renderStudents()">
-        </div>
-        <div>
-          <label>Sınıf / Şube Filtresi</label>
-          <select id="studentClassFilter" onchange="renderStudents()"></select>
-        </div>
-      </div>
-
-      <div style="margin-top:10px">
-        <button class="btn2" onclick="exportStudents()">Öğrencileri Excel İndir</button>
-      </div>
-
-      <div id="studentTable"></div>
+      <input id="safeStudentPhone" placeholder="05xx xxx xx xx">
     </div>
   </div>
 
-  <div class="card">
-    <h2>Toplu Öğrenci Excel Aktar</h2>
-    <p>Sütun düzeni: A Öğrenci, B Sınıf, C Şube, D Telefon, E Hedef Net</p>
-    <input type="file" id="studentExcelFile" accept=".xlsx,.xls,.csv">
-    <button class="btn" onclick="importStudents()">Öğrenci Excel Aktar</button>
-    <div id="studentImportResult" class="result">Henüz öğrenci aktarımı yok.</div>
-  </div>
-</section>
+  <button class="btn" onclick="safeAddStudent()">Öğrenciyi Kaydet</button>
+  <button class="btn2" onclick="safeExportStudents()">Öğrencileri Excel İndir</button>
 
+  <div id="safeStudentResult" class="result">Henüz işlem yapılmadı.</div>
+</div>
+
+
+    <div class="grid">
+      <div class="card">
+        <h2>Öğrenci Kaydı</h2>
+        <label>Ad Soyad</label><input id="studentName" placeholder="Örn: Ayşe Telli">
+        <label>Sınıf / Şube</label><input id="studentClass" placeholder="Örn: 7 veya 7A">
+        <label>Veli Telefonu</label><input id="studentPhone" placeholder="05xx xxx xx xx">
+        <label>Hedef Net</label><input id="studentTarget" type="number" placeholder="Örn: 75">
+        <button class="btn" onclick="addStudent()">Öğrenciyi Kaydet</button>
+        <button class="btn2" onclick="addDemoStudents()">Örnek Öğrenci Ekle</button>
+      </div>
+      <div class="card">
+        <h2>Öğrenci Listesi</h2>
+        <input id="studentSearch" placeholder="Öğrenci ara..." oninput="renderStudents()">
+        <div id="studentTable"></div>
+      </div>
+    </div>
+  </section>
 
   <section id="tests" class="section">
     <div class="grid">
@@ -301,7 +359,7 @@ th{background:#f4f9ff;color:#41556b}
   <section id="report" class="section">
     <div class="grid">
       <div class="card no-print">
-        <h2>Profesyonel Öğrenci Paneli</h2>
+        <h2>Stabil Öğrenci Kayıt Ekli</h2>
         <label>Öğrenci</label><select id="reportStudent" onchange="renderReport()"></select>
         <button class="btn" onclick="window.print()">PDF Olarak Kaydet / Yazdır</button>
         <button class="btn2" onclick="copyReport()">Metni Kopyala</button>
@@ -355,151 +413,25 @@ function cls(v){return norm(v).toUpperCase().replace(/\s+/g,"").replace("SINIF",
 function showTab(id,btn){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));btn.classList.add("active");renderAll(false)}
 function copyText(txt){navigator.clipboard?.writeText(txt);alert("Kopyalandı.")}
 
-
 /* Students */
-function getStudentFullClass(clsValue, branchValue){
- const c = cls(clsValue || "");
- const b = norm(branchValue || "").toUpperCase().replace(/\s+/g,"");
- if(!c) return b || "";
- if(c.match(/[A-ZÇĞİÖŞÜ]$/)) return c;
- return c + b;
-}
-function clearStudentForm(){
- const ids=["studentName","studentClass","studentBranch","studentPhone","studentTarget"];
- ids.forEach(id=>{const el=document.getElementById(id); if(el) el.value="";});
- const res=document.getElementById("studentAddResult");
- if(res) res.innerHTML="Form temizlendi.";
-}
 function addStudent(){
- const name=norm(document.getElementById("studentName")?.value);
- const className=getStudentFullClass(document.getElementById("studentClass")?.value, document.getElementById("studentBranch")?.value);
- const phone=norm(document.getElementById("studentPhone")?.value);
- const target=n(document.getElementById("studentTarget")?.value);
-
- if(!name){alert("Ad soyad giriniz."); return;}
-
- const exists=db.students.find(s=>s.name.toUpperCase()===name.toUpperCase() && (s.className||"")===className);
- if(exists){alert("Bu öğrenci zaten kayıtlı."); return;}
-
- db.students.push({id:uid(), name, className, phone, target});
- saveDB();
- renderAll();
-
- const res=document.getElementById("studentAddResult");
- if(res) res.innerHTML="✔ Öğrenci başarıyla kaydedildi.";
- clearStudentForm();
+ const name=norm(studentName.value); if(!name){alert("Öğrenci adı giriniz.");return}
+ db.students.push({id:uid(),name,className:cls(studentClass.value),phone:norm(studentPhone.value),target:n(studentTarget.value)});
+ saveDB();studentName.value="";studentClass.value="";studentPhone.value="";studentTarget.value="";renderAll();
 }
 function addDemoStudents(){
- [["MERVE DENİZ TÜRK","7A"],["MEDİNE ÖZKAN","7A"],["ESRA AYVAZ","8B"]].forEach(x=>{
-  if(!db.students.find(s=>s.name===x[0] && s.className===x[1])){
-   db.students.push({id:uid(),name:x[0],className:x[1],phone:"",target:70});
-  }
- });
+ [["MERVE DENİZ TÜRK","7"],["MEDİNE ÖZKAN","7A"],["ESRA AYVAZ","8B"]].forEach(x=>db.students.push({id:uid(),name:x[0],className:x[1],phone:"",target:70}));
  saveDB();renderAll();
 }
-function deleteStudent(id){
- if(!confirm("Öğrenci silinsin mi? Mini test/ödev/deneme kayıtları silinmez.")) return;
- db.students=db.students.filter(s=>s.id!==id);
- saveDB();renderAll();
-}
-function normalizePhoneForWa(phone){
- let p=norm(phone).replace(/\D/g,"");
- if(!p) return "";
- if(p.startsWith("0")) p="9"+p;
- if(!p.startsWith("90")) p="90"+p;
- return p;
-}
-function openStudentWhatsApp(id){
- const s=db.students.find(x=>x.id===id);
- if(!s || !s.phone){alert("Bu öğrencinin veli telefonu yok."); return;}
- const p=normalizePhoneForWa(s.phone);
- const msg=`Merhaba, ${s.name} öğrencimizin gelişim takibi hakkında bilgi vermek istiyoruz. Prestij Kurs`;
- window.open(`https://wa.me/${p}?text=${encodeURIComponent(msg)}`,"_blank");
-}
-function renderStudentClassFilter(){
- const el=document.getElementById("studentClassFilter");
- if(!el) return;
- const current=el.value||"TÜMÜ";
- const classes=[...new Set((db.students||[]).map(s=>s.className||"-").filter(Boolean))].sort();
- el.innerHTML=`<option value="TÜMÜ">Tüm Sınıflar</option>`+classes.map(c=>`<option>${c}</option>`).join("");
- if(current==="TÜMÜ" || classes.includes(current)) el.value=current;
-}
+function deleteStudent(id){if(confirm("Öğrenci silinsin mi?")){db.students=db.students.filter(s=>s.id!==id);saveDB();renderAll()}}
 function renderStudents(){
- const table=document.getElementById("studentTable");
- if(!table) return;
- const q=norm(document.getElementById("studentSearch")?.value).toLowerCase();
- const f=document.getElementById("studentClassFilter")?.value || "TÜMÜ";
-
- let list=(db.students||[]).filter(s=>{
-  const matchQ=(s.name||"").toLowerCase().includes(q) || (s.className||"").toLowerCase().includes(q) || (s.phone||"").toLowerCase().includes(q);
-  const matchF=f==="TÜMÜ" || (s.className||"-")===f;
-  return matchQ && matchF;
- }).sort((a,b)=>(a.className||"").localeCompare(b.className||"","tr") || (a.name||"").localeCompare(b.name||"","tr"));
-
- table.innerHTML=list.length?`
- <table>
-  <thead><tr><th>Öğrenci</th><th>Sınıf/Şube</th><th>Telefon</th><th>Hedef</th><th>Mini Test</th><th>Ödev</th><th>Deneme</th><th>İşlem</th></tr></thead>
-  <tbody>${list.map(s=>{
-    const t=(db.tests||[]).filter(x=>x.studentId===s.id).length;
-    const h=(db.homeworks||[]).filter(x=>x.studentId===s.id).length;
-    const e=(db.exams||[]).filter(x=>x.studentId===s.id).length;
-    return `<tr>
-      <td><b>${s.name}</b></td>
-      <td>${s.className||"-"}</td>
-      <td>${s.phone||"-"}</td>
-      <td>${s.target||"-"}</td>
-      <td>${t}</td>
-      <td>${h}</td>
-      <td>${e}</td>
-      <td>
-        <button class="btn2" style="padding:6px 8px;margin:0" onclick="openStudentWhatsApp('${s.id}')">WhatsApp</button>
-        <button class="btn-danger" style="padding:6px 8px;margin:0" onclick="deleteStudent('${s.id}')">Sil</button>
-      </td>
-    </tr>`;
-  }).join("")}</tbody>
- </table>`:`<div class="empty">Öğrenci bulunamadı.</div>`;
+ const q=norm(studentSearch?.value).toLowerCase();
+ const list=db.students.filter(s=>s.name.toLowerCase().includes(q)||s.className.toLowerCase().includes(q));
+ studentTable.innerHTML=list.length?`<table><thead><tr><th>Öğrenci</th><th>Sınıf</th><th>Telefon</th><th>Hedef</th><th>Sil</th></tr></thead><tbody>${list.map(s=>`<tr><td><b>${s.name}</b></td><td>${s.className||"-"}</td><td>${s.phone||"-"}</td><td>${s.target||"-"}</td><td><button class="btn-danger" onclick="deleteStudent('${s.id}')">❌</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty">Öğrenci yok.</div>`;
 }
-function importStudents(){
- const file=document.getElementById("studentExcelFile")?.files?.[0];
- if(!file){alert("Öğrenci Excel dosyası seçiniz."); return;}
- if(typeof XLSX==="undefined"){alert("Excel okuyucu yüklenemedi. Sayfayı yenileyin."); return;}
-
- const reader=new FileReader();
- reader.onload=e=>{
-  try{
-   const wb=XLSX.read(e.target.result,{type:"array"});
-   const ws=wb.Sheets[wb.SheetNames[0]];
-   const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",blankrows:false});
-   let added=0, skipped=0;
-   rows.forEach(row=>{
-    const joined=row.map(x=>norm(x).toLowerCase()).join(" ");
-    if(!joined.trim() || joined.includes("öğrenci") || joined.includes("ogrenci")){skipped++; return;}
-    const name=norm(row[0]);
-    if(!name){skipped++; return;}
-    const className=getStudentFullClass(row[1],row[2]);
-    const phone=norm(row[3]);
-    const target=n(row[4]);
-    const exists=db.students.find(s=>s.name.toUpperCase()===name.toUpperCase() && (s.className||"")===className);
-    if(exists){skipped++; return;}
-    db.students.push({id:uid(),name,className,phone,target});
-    added++;
-   });
-   saveDB();renderAll();
-   document.getElementById("studentImportResult").innerHTML=`${added} öğrenci eklendi. ${skipped} satır atlandı.`;
-  }catch(err){
-   alert("Öğrenci Excel okunamadı.");
-  }
- };
- reader.readAsArrayBuffer(file);
-}
-function exportStudents(){
- if(typeof XLSX==="undefined"){alert("Excel okuyucu yüklenemedi. Sayfayı yenileyin."); return;}
- const data=[["Öğrenci","Sınıf/Şube","Telefon","Hedef Net"]];
- (db.students||[]).forEach(s=>data.push([s.name||"",s.className||"",s.phone||"",s.target||""]));
- const ws=XLSX.utils.aoa_to_sheet(data);
- const wb=XLSX.utils.book_new();
- XLSX.utils.book_append_sheet(wb,ws,"Öğrenciler");
- XLSX.writeFile(wb,"prestij_ogrenci_listesi.xlsx");
+function renderSelects(){
+ const opts=db.students.map(s=>`<option value="${s.id}">${s.name} - ${s.className}</option>`).join("");
+ ["testStudent","hwStudent","examStudent","analysisStudent","reportStudent"].forEach(id=>{const el=document.getElementById(id); if(el)el.innerHTML=opts});
 }
 
 /* Mini Test */
@@ -1170,9 +1102,81 @@ function studentExamRankInfo(studentId){
 
 function renderStats(){stStudents.innerText=db.students.length;stTests.innerText=db.tests.length;stHw.innerText=db.homeworks.length;stExam.innerText=db.exams.length;stAvg.innerText=db.tests.length?"%"+Math.round(db.tests.reduce((a,t)=>a+t.rate,0)/db.tests.length):"0%"}
 function renderAll(resetTopics=true){
- renderStats();renderSelects();renderStudentClassFilter();if(resetTopics)fillTopicOptions();renderStudents();renderTests();renderHomework();renderExam();renderAnalysis();renderTeacher();renderReport();renderCare();renderExamRankSelectors();renderExamRanking();
+ renderStats();renderSelects();if(resetTopics)fillTopicOptions();renderStudents();renderTests();renderHomework();renderExam();renderAnalysis();renderTeacher();renderReport();renderCare();renderExamRankSelectors();renderExamRanking();
 }
 document.addEventListener("DOMContentLoaded",()=>renderAll());
+
+function safeStudentClassName(clsVal, branchVal){
+  const c = (clsVal || "").toString().trim().toUpperCase().replace(/\s+/g,"");
+  const b = (branchVal || "").toString().trim().toUpperCase().replace(/\s+/g,"");
+  if(!c) return b || "";
+  if(/[A-ZÇĞİÖŞÜ]$/.test(c)) return c;
+  return c + b;
+}
+
+function safeAddStudent(){
+  const name = (document.getElementById("safeStudentName")?.value || "").trim();
+  const className = safeStudentClassName(
+    document.getElementById("safeStudentClass")?.value,
+    document.getElementById("safeStudentBranch")?.value
+  );
+  const phone = (document.getElementById("safeStudentPhone")?.value || "").trim();
+
+  if(!name){
+    alert("Ad soyad giriniz.");
+    return;
+  }
+
+  if(!db.students) db.students = [];
+
+  const exists = db.students.find(s =>
+    (s.name || "").toUpperCase() === name.toUpperCase() &&
+    (s.className || "") === className
+  );
+
+  if(exists){
+    alert("Bu öğrenci zaten kayıtlı.");
+    return;
+  }
+
+  db.students.push({
+    id: uid(),
+    name: name,
+    className: className,
+    phone: phone,
+    target: 0
+  });
+
+  saveDB();
+
+  if(typeof renderAll === "function") renderAll();
+
+  const res = document.getElementById("safeStudentResult");
+  if(res) res.innerHTML = "✔ Öğrenci kaydedildi.";
+
+  ["safeStudentName","safeStudentClass","safeStudentBranch","safeStudentPhone"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+}
+
+function safeExportStudents(){
+  if(typeof XLSX === "undefined"){
+    alert("Excel modülü yüklenemedi. Sayfayı yenileyin.");
+    return;
+  }
+
+  const data = [["Öğrenci","Sınıf/Şube","Telefon"]];
+  (db.students || []).forEach(s=>{
+    data.push([s.name || "", s.className || "", s.phone || ""]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Öğrenciler");
+  XLSX.writeFile(wb, "prestij_ogrenci_listesi.xlsx");
+}
+
 </script>
 </body>
 </html>
