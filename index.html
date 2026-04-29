@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v23.3 Mini Test Excel Entegre</title>
+<title>Prestij Takip Sistemi v23.4 Mini Test Excel Entegre</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -53,7 +53,7 @@ th{background:#f4f9ff;color:#41556b}
 </head>
 <body>
 <header>
-  <h1>👑 Prestij Takip Sistemi v23.3 Mini Test Excel Entegre</h1>
+  <h1>👑 Prestij Takip Sistemi v23.4 Mini Test Excel Entegre</h1>
   <p>Kitap2.xlsx mini test verileri sisteme gömülü: 112 öğrenci, 1004 mini test</p>
 </header>
 
@@ -341,44 +341,171 @@ function renderExam(){
 }
 
 /* Analysis */
+function normalizeExamTotal(e){
+ const val = e.total ?? e.totalNet ?? e.toplam ?? e.netToplam ?? 0;
+ return n(val);
+}
+function examRowsForStudent(id){
+ return db.exams.filter(e=>e.studentId===id).map(e=>({
+  ...e,
+  total: normalizeExamTotal(e),
+  date: e.date || e.tarih || "-"
+ }));
+}
+function homeworkStatsForStudent(id){
+ const list=db.homeworks.filter(h=>h.studentId===id);
+ const done=list.filter(h=>h.status==="Yaptı").length;
+ const partial=list.filter(h=>h.status==="Eksik").length;
+ const missing=list.filter(h=>h.status==="Yapmadı"||h.status==="Getirmedi").length;
+ const rate=list.length?Math.round((done/list.length)*100):0;
+ return {list,done,partial,missing,rate,total:list.length};
+}
+function examStatsForStudent(id){
+ const list=examRowsForStudent(id);
+ const latest=list[0]||null;
+ const oldest=list.length?list[list.length-1]:null;
+ const avg=list.length?Number((list.reduce((a,e)=>a+normalizeExamTotal(e),0)/list.length).toFixed(2)):0;
+ const diff=(latest&&oldest&&list.length>1)?Number((normalizeExamTotal(latest)-normalizeExamTotal(oldest)).toFixed(2)):0;
+ let label="Veri yetersiz";
+ if(list.length>1) label=diff>=3?"Yükseliş":diff<=-3?"Düşüş":"Durağan";
+ return {list,latest,oldest,avg,diff,label,total:list.length};
+}
 function summary(id){
  const st=db.students.find(s=>s.id===id);
  const tests=db.tests.filter(t=>t.studentId===id);
- const hw=db.homeworks.filter(h=>h.studentId===id);
- const exams=db.exams.filter(e=>e.studentId===id);
+ const hwStats=homeworkStatsForStudent(id);
+ const exStats=examStatsForStudent(id);
  const avg=tests.length?Math.round(tests.reduce((a,t)=>a+t.rate,0)/tests.length):0;
- const points=tests.reduce((a,t)=>a+t.point,0)+hw.reduce((a,h)=>a+h.point,0);
- const byTopic={};tests.forEach(t=>{(byTopic[t.topic]||(byTopic[t.topic]=[])).push(t.rate)});
+ const points=tests.reduce((a,t)=>a+t.point,0)+hwStats.list.reduce((a,h)=>a+(h.point||0),0);
+ const byTopic={};
+ tests.forEach(t=>{(byTopic[t.topic]||(byTopic[t.topic]=[])).push(t.rate)});
  const topicRows=Object.entries(byTopic).map(([name,arr])=>({name,avg:Math.round(arr.reduce((a,b)=>a+b,0)/arr.length),count:arr.length})).sort((a,b)=>a.avg-b.avg);
- return {st,tests,hw,exams,avg,points,topicRows,weak:topicRows[0]?.name||"-",strong:topicRows.at(-1)?.name||"-"};
+ const riskTests=tests.filter(t=>t.status==="Riskli").length;
+ return {
+  st,tests,hw:hwStats.list,exams:exStats.list,
+  homework:hwStats,exam:exStats,
+  avg,points,riskTests,
+  topicRows,
+  weak:topicRows[0]?.name||"-",
+  strong:topicRows.at(-1)?.name||"-"
+ };
 }
 function trend(tests){
- if(tests.length<2)return {label:"Veri yetersiz",diff:0,text:"Trend için en az iki mini test gerekir."};
- const arr=[...tests].reverse(); const mid=Math.floor(arr.length/2)||1; const a=arr.slice(0,mid), b=arr.slice(mid);
+ if(tests.length<2)return {label:"Veri yetersiz",diff:0,text:"Mini test trendi için en az iki kayıt gerekir."};
+ const arr=[...tests].reverse();
+ const mid=Math.floor(arr.length/2)||1;
+ const a=arr.slice(0,mid), b=arr.slice(mid);
  const av=x=>Math.round(x.reduce((p,c)=>p+c.rate,0)/x.length);
  const old=av(a), nw=av(b.length?b:a), diff=nw-old;
- return {label:diff>=5?"Yükseliş":diff<=-5?"Düşüş":"Durağan",diff,text:`Önceki ortalama %${old}, son ortalama %${nw}. Değişim ${diff>=0?"+":""}${diff} puan.`};
+ return {label:diff>=5?"Yükseliş":diff<=-5?"Düşüş":"Durağan",diff,text:`Mini testlerde önceki ortalama %${old}, son ortalama %${nw}. Değişim ${diff>=0?"+":""}${diff} puan.`};
 }
 function bars(rows){
- if(!rows.length)return `<div class="empty">Konu analizi için veri yok.</div>`;
+ if(!rows.length)return `<div class="empty">Konu analizi için mini test verisi yok.</div>`;
  return rows.map(r=>`<div class="bar-row"><div class="bar-head"><b>${r.name}</b><span>%${r.avg} • ${r.count} kayıt</span></div><div class="bar-bg"><div class="bar ${r.avg<50?"redbar":""}" style="width:${Math.max(5,r.avg)}%"></div></div></div>`).join("");
 }
-function renderAnalysis(){
- const x=summary(analysisStudent.value); if(!x.st){analysisArea.innerHTML=`<div class="empty">Öğrenci seçiniz.</div>`;return}
+function examTableForStudent(list){
+ if(!list.length) return `<div class="empty">Deneme kaydı yok.</div>`;
+ return `<table><thead><tr><th>Tarih</th><th>Deneme</th><th>Toplam Net</th><th>Türkçe</th><th>Mat</th><th>Fen</th><th>Sos</th><th>İng</th></tr></thead><tbody>${list.slice(0,8).map(e=>`<tr><td>${e.date||"-"}</td><td>${e.name||"Deneme"}</td><td><b>${normalizeExamTotal(e)}</b></td><td>${e.tr??e.trNet??"-"}</td><td>${e.mat??e.matNet??"-"}</td><td>${e.fen??e.fenNet??"-"}</td><td>${e.sos??e.sosNet??"-"}</td><td>${e.ing??e.ingNet??"-"}</td></tr>`).join("")}</tbody></table>`;
+}
+function homeworkTableForStudent(list){
+ if(!list.length) return `<div class="empty">Ödev kaydı yok.</div>`;
+ return `<table><thead><tr><th>Tarih</th><th>Öğretmen</th><th>Ders</th><th>Durum</th><th>Not</th></tr></thead><tbody>${list.slice(0,8).map(h=>`<tr><td>${h.date||"-"}</td><td>${h.teacher||"-"}</td><td>${h.lesson||"-"}</td><td><b>${h.status||"-"}</b></td><td>${h.note||"-"}</td></tr>`).join("")}</tbody></table>`;
+}
+function combinedComment(x){
  const tr=trend(x.tests);
- analysisArea.innerHTML=`<div class="report-grid"><div class="report-box"><small>Ortalama</small><b>%${x.avg}</b></div><div class="report-box"><small>Trend</small><b>${tr.label}</b></div><div class="report-box"><small>Zayıf Konu</small><b>${x.weak}</b></div></div><div class="comment">${x.st.name} için analiz:\n${tr.text}\nÖncelikli konu: ${x.weak}\nÖneri: konu tekrarı + mini test + ödev kontrolü.</div><h3>Konu Grafiği</h3>${bars(x.topicRows)}<h3>Son Testler</h3>${testTable(x.tests.slice(0,5))}`;
+ const exam=x.exam;
+ const hw=x.homework;
+
+ let levelText = "";
+ if(x.avg < 45) levelText = "Mini test sonuçları öğrencinin konu bazlı yakın takibe ihtiyaç duyduğunu göstermektedir.";
+ else if(x.avg < 70) levelText = "Mini test sonuçları orta seviyede olup düzenli tekrar ve pekiştirme ile yükseltilebilir.";
+ else levelText = "Mini test sonuçları genel olarak olumlu seviyededir; hedef artık kalıcılık ve sınav pratiği olmalıdır.";
+
+ let examText = "";
+ if(exam.total===0){
+   examText = "Deneme verisi henüz olmadığı için sınav geneli net gelişimi değerlendirilememektedir.";
+ }else if(exam.total===1){
+   examText = `Son deneme neti ${exam.latest.total} olarak görünmektedir. Net gelişimi için en az iki deneme kaydı sonrası trend daha sağlıklı yorumlanacaktır.`;
+ }else{
+   examText = `Deneme performansında ${exam.label.toLowerCase()} görülmektedir. İlk/son deneme farkı ${exam.diff>=0?"+":""}${exam.diff} nettir. Son deneme neti ${exam.latest.total}, deneme ortalaması ${exam.avg} nettir.`;
+ }
+
+ let hwText = "";
+ if(hw.total===0){
+   hwText = "Ödev verisi olmadığı için çalışma disiplini hakkında kesin yorum yapılamamaktadır.";
+ }else if(hw.missing>0){
+   hwText = `Ödev takiplerinde ${hw.missing} olumsuz durum görülmektedir. Ödev düzeni güçlendirilmezse konu kalıcılığı ve deneme netleri etkilenebilir.`;
+ }else{
+   hwText = `Ödev takipleri genel olarak olumlu görünmektedir. Yapılan ödev oranı %${hw.rate} seviyesindedir.`;
+ }
+
+ return `${levelText}
+
+${tr.text}
+
+${examText}
+
+${hwText}
+
+Genel sonuç: ${x.st.name} için bu haftaki öncelik ${x.weak} konusunun tekrar edilmesi, mini test ile ölçülmesi, deneme yanlışlarının incelenmesi ve ödev takibinin düzenli yapılmasıdır.`;
+}
+function renderAnalysis(){
+ const x=summary(analysisStudent.value);
+ if(!x.st){analysisArea.innerHTML=`<div class="empty">Öğrenci seçiniz.</div>`;return}
+ const tr=trend(x.tests);
+ analysisArea.innerHTML=`
+ <div class="report-grid">
+  <div class="report-box"><small>Mini Test Ort.</small><b>%${x.avg}</b></div>
+  <div class="report-box"><small>Mini Test Trend</small><b>${tr.label}</b></div>
+  <div class="report-box"><small>Riskli Test</small><b>${x.riskTests}</b></div>
+  <div class="report-box"><small>Deneme Ort. Net</small><b>${x.exam.avg||"-"}</b></div>
+  <div class="report-box"><small>Deneme Trend</small><b>${x.exam.label}</b></div>
+  <div class="report-box"><small>Ödev Yapma</small><b>${x.homework.total?("%"+x.homework.rate):"-"}</b></div>
+ </div>
+ <div class="comment">${combinedComment(x)}</div>
+ <h3>Konu Grafiği - Mini Test</h3>${bars(x.topicRows)}
+ <h3>Son Mini Testler</h3>${testTable(x.tests.slice(0,5))}
+ <h3>Deneme Performansı</h3>${examTableForStudent(x.exams)}
+ <h3>Ödev Takibi</h3>${homeworkTableForStudent(x.hw)}
+ `;
 }
 function renderTeacher(){
  const map={};
- db.tests.forEach(t=>{const k=t.teacher||"Belirtilmedi";map[k]||(map[k]={test:0,rate:0,risk:0,students:new Set(),lessons:{}});map[k].test++;map[k].rate+=t.rate;if(t.status==="Riskli")map[k].risk++;map[k].students.add(t.studentName);map[k].lessons[t.lesson]=(map[k].lessons[t.lesson]||0)+1});
- db.homeworks.forEach(h=>{const k=h.teacher||"Belirtilmedi";map[k]||(map[k]={test:0,rate:0,risk:0,students:new Set(),lessons:{}});map[k].hw=(map[k].hw||0)+1});
- const rows=Object.entries(map).map(([name,x])=>({name,test:x.test,avg:x.test?Math.round(x.rate/x.test):0,risk:x.risk,student:x.students.size,hw:x.hw||0,lesson:Object.entries(x.lessons).sort((a,b)=>b[1]-a[1])[0]?.[0]||"-"})).sort((a,b)=>b.test-a.test);
- teacherArea.innerHTML=rows.length?`<table><thead><tr><th>Öğretmen</th><th>Mini Test</th><th>Ort.</th><th>Riskli</th><th>Ödev</th><th>Öğrenci</th><th>Ana Ders</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.name}</b></td><td>${r.test}</td><td>%${r.avg}</td><td>${r.risk}</td><td>${r.hw}</td><td>${r.student}</td><td>${r.lesson}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">Öğretmen verisi yok.</div>`;
+ db.tests.forEach(t=>{const k=t.teacher||"Belirtilmedi";map[k]||(map[k]={test:0,rate:0,risk:0,students:new Set(),lessons:{},hw:0,hwBad:0,exam:0});map[k].test++;map[k].rate+=t.rate;if(t.status==="Riskli")map[k].risk++;map[k].students.add(t.studentName);map[k].lessons[t.lesson]=(map[k].lessons[t.lesson]||0)+1});
+ db.homeworks.forEach(h=>{const k=h.teacher||"Belirtilmedi";map[k]||(map[k]={test:0,rate:0,risk:0,students:new Set(),lessons:{},hw:0,hwBad:0,exam:0});map[k].hw++;if(h.status==="Yapmadı"||h.status==="Getirmedi")map[k].hwBad++});
+ const rows=Object.entries(map).map(([name,x])=>({name,test:x.test,avg:x.test?Math.round(x.rate/x.test):0,risk:x.risk,student:x.students.size,hw:x.hw,hwBad:x.hwBad,lesson:Object.entries(x.lessons).sort((a,b)=>b[1]-a[1])[0]?.[0]||"-"})).sort((a,b)=>b.test-a.test);
+ teacherArea.innerHTML=rows.length?`<table><thead><tr><th>Öğretmen</th><th>Mini Test</th><th>Ort.</th><th>Riskli</th><th>Ödev</th><th>Ödev Sorunu</th><th>Öğrenci</th><th>Ana Ders</th><th>Yorum</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${r.name}</b></td><td>${r.test}</td><td>%${r.avg}</td><td>${r.risk}</td><td>${r.hw}</td><td>${r.hwBad}</td><td>${r.student}</td><td>${r.lesson}</td><td>${r.test<5?"Mini test girişi artırılmalı":r.risk>5?"Riskli öğrenciler takip edilmeli":"Takip düzenli görünüyor"}</td></tr>`).join("")}</tbody></table>`:`<div class="empty">Öğretmen verisi yok.</div>`;
 }
 function renderReport(){
- const x=summary(reportStudent.value); if(!x.st){reportArea.innerHTML=`<div class="empty">Öğrenci seçiniz.</div>`;return}
+ const x=summary(reportStudent.value);
+ if(!x.st){reportArea.innerHTML=`<div class="empty">Öğrenci seçiniz.</div>`;return}
  const tr=trend(x.tests);
- reportArea.innerHTML=`<h2>${x.st.name} Profesyonel Veli Raporu</h2><div class="report-grid"><div class="report-box"><small>Sınıf</small><b>${x.st.className||"-"}</b></div><div class="report-box"><small>Mini Test Ort.</small><b>%${x.avg}</b></div><div class="report-box"><small>Trend</small><b>${tr.label}</b></div><div class="report-box"><small>Zayıf Konu</small><b>${x.weak}</b></div><div class="report-box"><small>Güçlü Konu</small><b>${x.strong}</b></div><div class="report-box"><small>Puan</small><b>${x.points}</b></div></div><div class="comment">${x.st.name} için yapılan ölçümlerde genel başarı %${x.avg} olarak görünmektedir.\n\n${tr.text}\n\nÖğrencimizin bu hafta öncelikli çalışma alanı: ${x.weak}. Bu alanda kısa konu tekrarı, öğretmen kontrolünde soru çözümü ve tekrar mini test önerilir.\n\nEvde düzenli ödev kontrolü ve kurum içi takip birlikte yürütüldüğünde gelişim daha kalıcı olacaktır.</div><h3>Konu Bazlı Analiz</h3>${bars(x.topicRows)}<h3>Son Mini Testler</h3>${testTable(x.tests.slice(0,5))}`;
+ reportArea.innerHTML=`
+ <h2>${x.st.name} Profesyonel Veli Raporu</h2>
+ <div class="report-grid">
+  <div class="report-box"><small>Sınıf</small><b>${x.st.className||"-"}</b></div>
+  <div class="report-box"><small>Mini Test Ort.</small><b>%${x.avg}</b></div>
+  <div class="report-box"><small>Mini Test Trend</small><b>${tr.label}</b></div>
+  <div class="report-box"><small>Deneme Ort. Net</small><b>${x.exam.avg||"-"}</b></div>
+  <div class="report-box"><small>Deneme Trend</small><b>${x.exam.label}</b></div>
+  <div class="report-box"><small>Ödev Yapma</small><b>${x.homework.total?("%"+x.homework.rate):"-"}</b></div>
+  <div class="report-box"><small>Zayıf Konu</small><b>${x.weak}</b></div>
+  <div class="report-box"><small>Güçlü Konu</small><b>${x.strong}</b></div>
+  <div class="report-box"><small>Toplam Puan</small><b>${x.points}</b></div>
+ </div>
+ <h3>Genel Akademik Değerlendirme</h3>
+ <div class="comment">${combinedComment(x)}</div>
+ <h3>Mini Test Konu Analizi</h3>${bars(x.topicRows)}
+ <h3>Son Mini Testler</h3>${testTable(x.tests.slice(0,5))}
+ <h3>Deneme Analizi</h3>${examTableForStudent(x.exams)}
+ <h3>Ödev Takip Analizi</h3>${homeworkTableForStudent(x.hw)}
+ <h3>Bu Hafta Önerilen Plan</h3>
+ <div class="comment">1. ${x.weak} konusunda kısa tekrar yapılmalı.
+2. Bu konu üzerinden yeni mini test uygulanmalı.
+3. Son deneme yanlışları öğrenciyle birlikte incelenmeli.
+4. Ödev teslim durumu veli ve öğretmen tarafından düzenli kontrol edilmeli.
+5. Bir sonraki ölçümde mini test ortalaması ve deneme neti yeniden karşılaştırılmalı.</div>
+ `;
 }
 function copyReport(){copyText(reportArea.innerText)}
 
