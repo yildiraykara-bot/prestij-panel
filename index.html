@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v23 Temiz Stabil</title>
+<title>Prestij Takip Sistemi v23.1 Excel Okuma Düzeltme</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -53,12 +53,12 @@ th{background:#f4f9ff;color:#41556b}
 </head>
 <body>
 <header>
-  <h1>👑 Prestij Takip Sistemi v23 Temiz Stabil</h1>
+  <h1>👑 Prestij Takip Sistemi v23.1 Excel Okuma Düzeltme</h1>
   <p>Hatasız çekirdek sistem: öğrenci, mini test, ödev, deneme, veli raporu, yedekleme</p>
 </header>
 
 <div class="container">
-  <div class="notice"><b>Önemli:</b> Bu sürüm sıfırdan inşa edildi. Önce temel sistemin sorunsuz çalışması hedeflendi. Excel aktarımında başlıklar esnek okunur; hatalı/boş sayısal veriler otomatik 0 kabul edilir.</div>
+  <div class="notice"><b>Önemli:</b> Bu sürüm sıfırdan inşa edildi. Önce temel sistemin sorunsuz çalışması hedeflendi. Excel aktarımında başlıklar okunamazsa sistem kolon sırasına göre okur: A Tarih, C Öğrenci, D Sınıf, E Şube, F Öğretmen, G Ders, H Konu, J Soru, K Doğru, L Yanlış, M Boş.</div>
 
   <div class="stats">
     <div class="stat"><small>Öğrenci</small><b id="stStudents">0</b></div>
@@ -169,7 +169,7 @@ th{background:#f4f9ff;color:#41556b}
     <div class="grid2">
       <div class="card">
         <h2>Mini Test Excel / CSV Aktar</h2>
-        <p>Önerilen başlıklar: Öğrenci, Sınıf, Öğretmen, Ders, Konu, Soru, Doğru, Yanlış, Boş</p>
+        <p>Excel kolon yapısı desteklenir: A Tarih, C Öğrenci, D Sınıf, E Şube, F Öğretmen, G Ders, H Konu, J Soru, K Doğru, L Yanlış, M Boş. Başlık varsa da okur.</p>
         <label><input type="checkbox" id="clearBeforeImport"> Aktarmadan önce mevcut mini testleri sil</label>
         <input type="file" id="testFile" accept=".xlsx,.xls,.csv">
         <button class="btn" onclick="importTests()">Mini Test Aktar</button>
@@ -382,25 +382,106 @@ function copyReport(){copyText(reportArea.innerText)}
 
 /* Excel Import */
 function key(row,patterns){return Object.keys(row).find(k=>patterns.some(p=>k.toString().toLowerCase().includes(p)))}
-function readFile(file,cb){
+function excelDateToTR(v){
+ if(!v) return new Date().toLocaleDateString("tr-TR");
+ if(typeof v==="number"){
+  const d = XLSX.SSF.parse_date_code(v);
+  if(d) return String(d.d).padStart(2,"0")+"."+String(d.m).padStart(2,"0")+"."+d.y;
+ }
+ return norm(v) || new Date().toLocaleDateString("tr-TR");
+}
+function readExcelAOA(file,cb){
  if(!file){alert("Dosya seçiniz.");return}
  const r=new FileReader();
- r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];cb(XLSX.utils.sheet_to_json(ws,{defval:""}))}catch(err){alert("Excel okunamadı.")}};
+ r.onload=e=>{
+  try{
+   const wb=XLSX.read(e.target.result,{type:"array"});
+   const ws=wb.Sheets[wb.SheetNames[0]];
+   cb(XLSX.utils.sheet_to_json(ws,{header:1,defval:""}));
+  }catch(err){alert("Excel okunamadı. Dosyayı kapatıp tekrar yüklemeyi deneyin.")}
+ };
  r.readAsArrayBuffer(file);
 }
+function looksLikeHeader(row){
+ const text=row.map(x=>norm(x).toLowerCase()).join(" ");
+ return text.includes("öğr") || text.includes("ogr") || text.includes("doğru") || text.includes("dogru") || text.includes("yanlış") || text.includes("yanlis");
+}
+function headerIndexMap(header){
+ const h=header.map(x=>norm(x).toLowerCase());
+ const find=(arr)=>h.findIndex(v=>arr.some(p=>v.includes(p)));
+ return {
+  date:find(["tarih"]),
+  student:find(["öğr","ogr","isim","ad soyad"]),
+  grade:find(["sınıf","sinif"]),
+  branch:find(["şube","sube"]),
+  teacher:find(["öğret","ogret","hoca"]),
+  lesson:find(["ders","branş","brans"]),
+  topic:find(["konu","kazanım","kazanim"]),
+  total:find(["soru","toplam"]),
+  correct:find(["doğru","dogru"]),
+  wrong:find(["yanlış","yanlis"]),
+  blank:find(["boş","bos"])
+ };
+}
+function getCell(row,idx){return idx>=0?row[idx]:""}
 function importTests(){
  if(clearBeforeImport.checked)db.tests=[];
- readFile(testFile.files[0],rows=>{
-  let added=0,skip=0;
-  rows.forEach(row=>{
-   const kName=key(row,["öğr","ogr","isim","ad"]); const name=norm(row[kName]); if(!name)return;
-   const kClass=key(row,["sınıf","sinif","şube","sube"]); const kTeacher=key(row,["öğret","ogret","hoca"]); const kLesson=key(row,["ders","branş","brans"]); const kTopic=key(row,["konu","kazanım","kazanim"]); const kTotal=key(row,["soru","toplam"]); const kD=key(row,["doğru","dogru"]); const kY=key(row,["yanlış","yanlis"]); const kB=key(row,["boş","bos"]);
-   let st=db.students.find(s=>s.name.toUpperCase()===name.toUpperCase());
-   if(!st){st={id:uid(),name,className:cls(row[kClass]),phone:"",target:0};db.students.push(st)}
-   const t=makeTest(st,norm(row[kTeacher])||"Belirtilmedi",norm(row[kLesson])||"Matematik",norm(row[kTopic])||"Konu",row[kTotal],row[kD],row[kY],row[kB]);
-   if(addTestUnique(t))added++;else skip++;
-  });
-  saveDB();renderAll();importTestResult.innerHTML=`${added} kayıt eklendi. ${skip} tekrar kayıt atlandı.`;
+ readExcelAOA(testFile.files[0],aoa=>{
+  let added=0,skip=0,bad=0;
+  if(!aoa || !aoa.length){importTestResult.innerHTML="Excel boş görünüyor.";return;}
+
+  let start=0;
+  let map=null;
+
+  const headerRowIndex = aoa.findIndex(r=>looksLikeHeader(r));
+  if(headerRowIndex>=0){
+    map=headerIndexMap(aoa[headerRowIndex]);
+    start=headerRowIndex+1;
+    if(map.student<0) map.student=2;
+    if(map.grade<0) map.grade=3;
+    if(map.branch<0) map.branch=4;
+    if(map.teacher<0) map.teacher=5;
+    if(map.lesson<0) map.lesson=6;
+    if(map.topic<0) map.topic=7;
+    if(map.total<0) map.total=9;
+    if(map.correct<0) map.correct=10;
+    if(map.wrong<0) map.wrong=11;
+    if(map.blank<0) map.blank=12;
+    if(map.date<0) map.date=0;
+  }else{
+    map={date:0, student:2, grade:3, branch:4, teacher:5, lesson:6, topic:7, total:9, correct:10, wrong:11, blank:12};
+    start=0;
+  }
+
+  for(let i=start;i<aoa.length;i++){
+    const row=aoa[i];
+    const name=norm(getCell(row,map.student));
+    if(!name || name.toLowerCase().includes("öğr") || name.toLowerCase().includes("ogr")) continue;
+
+    const grade=norm(getCell(row,map.grade));
+    const branch=norm(getCell(row,map.branch));
+    const className=cls((grade||"")+(branch||""));
+    const teacher=norm(getCell(row,map.teacher))||"Belirtilmedi";
+    const lesson=norm(getCell(row,map.lesson))||"Matematik";
+    const topic=norm(getCell(row,map.topic))||"Konu";
+    const total=getCell(row,map.total);
+    const correct=getCell(row,map.correct);
+    const wrong=getCell(row,map.wrong);
+    const blank=getCell(row,map.blank);
+    const date=excelDateToTR(getCell(row,map.date));
+
+    let st=db.students.find(s=>s.name.toUpperCase()===name.toUpperCase() && (!className || s.className===className));
+    if(!st){
+      st={id:uid(),name,className,phone:"",target:0};
+      db.students.push(st);
+    }
+
+    const t=makeTest(st,teacher,lesson,topic,total,correct,wrong,blank,date);
+    if(addTestUnique(t)) added++; else skip++;
+  }
+
+  saveDB();renderAll();
+  importTestResult.innerHTML=`${added} kayıt eklendi. ${skip} tekrar kayıt atlandı. ${bad} satır okunamadı.`;
  });
 }
 
