@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v23.1 Excel Okuma Düzeltme</title>
+<title>Prestij Takip Sistemi v23.2 Sabit Excel Kolon Okuma</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -53,12 +53,12 @@ th{background:#f4f9ff;color:#41556b}
 </head>
 <body>
 <header>
-  <h1>👑 Prestij Takip Sistemi v23.1 Excel Okuma Düzeltme</h1>
+  <h1>👑 Prestij Takip Sistemi v23.2 Sabit Excel Kolon Okuma</h1>
   <p>Hatasız çekirdek sistem: öğrenci, mini test, ödev, deneme, veli raporu, yedekleme</p>
 </header>
 
 <div class="container">
-  <div class="notice"><b>Önemli:</b> Bu sürüm sıfırdan inşa edildi. Önce temel sistemin sorunsuz çalışması hedeflendi. Excel aktarımında başlıklar okunamazsa sistem kolon sırasına göre okur: A Tarih, C Öğrenci, D Sınıf, E Şube, F Öğretmen, G Ders, H Konu, J Soru, K Doğru, L Yanlış, M Boş.</div>
+  <div class="notice"><b>Önemli:</b> Bu sürüm sıfırdan inşa edildi. Önce temel sistemin sorunsuz çalışması hedeflendi. Excel aktarımında artık başlık arama kapatıldı. Sistem doğrudan sabit kolon düzenini okur: A Tarih, C Öğrenci, D Sınıf, E Şube, F Öğretmen, G Ders, H Konu, J Soru, K Doğru, L Yanlış, M Boş.</div>
 
   <div class="stats">
     <div class="stat"><small>Öğrenci</small><b id="stStudents">0</b></div>
@@ -397,66 +397,36 @@ function readExcelAOA(file,cb){
   try{
    const wb=XLSX.read(e.target.result,{type:"array"});
    const ws=wb.Sheets[wb.SheetNames[0]];
-   cb(XLSX.utils.sheet_to_json(ws,{header:1,defval:""}));
-  }catch(err){alert("Excel okunamadı. Dosyayı kapatıp tekrar yüklemeyi deneyin.")}
+   cb(XLSX.utils.sheet_to_json(ws,{header:1,defval:"",blankrows:false}));
+  }catch(err){
+   alert("Excel okunamadı. Excel dosyasını kapatıp tekrar yüklemeyi deneyin.");
+  }
  };
  r.readAsArrayBuffer(file);
 }
-function looksLikeHeader(row){
+function getCell(row,idx){return idx>=0 ? row[idx] : ""}
+function isProbablyHeaderOrEmpty(row){
  const text=row.map(x=>norm(x).toLowerCase()).join(" ");
- return text.includes("öğr") || text.includes("ogr") || text.includes("doğru") || text.includes("dogru") || text.includes("yanlış") || text.includes("yanlis");
+ if(!text.trim()) return true;
+ if(text.includes("öğrenci") || text.includes("ogrenci") || text.includes("doğru") || text.includes("dogru") || text.includes("yanlış") || text.includes("yanlis")) return true;
+ return false;
 }
-function headerIndexMap(header){
- const h=header.map(x=>norm(x).toLowerCase());
- const find=(arr)=>h.findIndex(v=>arr.some(p=>v.includes(p)));
- return {
-  date:find(["tarih"]),
-  student:find(["öğr","ogr","isim","ad soyad"]),
-  grade:find(["sınıf","sinif"]),
-  branch:find(["şube","sube"]),
-  teacher:find(["öğret","ogret","hoca"]),
-  lesson:find(["ders","branş","brans"]),
-  topic:find(["konu","kazanım","kazanim"]),
-  total:find(["soru","toplam"]),
-  correct:find(["doğru","dogru"]),
-  wrong:find(["yanlış","yanlis"]),
-  blank:find(["boş","bos"])
- };
-}
-function getCell(row,idx){return idx>=0?row[idx]:""}
 function importTests(){
- if(clearBeforeImport.checked)db.tests=[];
+ if(clearBeforeImport.checked) db.tests = [];
+
  readExcelAOA(testFile.files[0],aoa=>{
-  let added=0,skip=0,bad=0;
-  if(!aoa || !aoa.length){importTestResult.innerHTML="Excel boş görünüyor.";return;}
+  let added=0, skip=0, empty=0;
 
-  let start=0;
-  let map=null;
+  // Kesin sabit kolon düzeni:
+  // A=0 Tarih, C=2 Öğrenci, D=3 Sınıf, E=4 Şube, F=5 Öğretmen,
+  // G=6 Ders, H=7 Konu, J=9 Soru, K=10 Doğru, L=11 Yanlış, M=12 Boş
+  const map={date:0, student:2, grade:3, branch:4, teacher:5, lesson:6, topic:7, total:9, correct:10, wrong:11, blank:12};
 
-  const headerRowIndex = aoa.findIndex(r=>looksLikeHeader(r));
-  if(headerRowIndex>=0){
-    map=headerIndexMap(aoa[headerRowIndex]);
-    start=headerRowIndex+1;
-    if(map.student<0) map.student=2;
-    if(map.grade<0) map.grade=3;
-    if(map.branch<0) map.branch=4;
-    if(map.teacher<0) map.teacher=5;
-    if(map.lesson<0) map.lesson=6;
-    if(map.topic<0) map.topic=7;
-    if(map.total<0) map.total=9;
-    if(map.correct<0) map.correct=10;
-    if(map.wrong<0) map.wrong=11;
-    if(map.blank<0) map.blank=12;
-    if(map.date<0) map.date=0;
-  }else{
-    map={date:0, student:2, grade:3, branch:4, teacher:5, lesson:6, topic:7, total:9, correct:10, wrong:11, blank:12};
-    start=0;
-  }
+  aoa.forEach((row)=>{
+    if(isProbablyHeaderOrEmpty(row)){ empty++; return; }
 
-  for(let i=start;i<aoa.length;i++){
-    const row=aoa[i];
     const name=norm(getCell(row,map.student));
-    if(!name || name.toLowerCase().includes("öğr") || name.toLowerCase().includes("ogr")) continue;
+    if(!name){ empty++; return; }
 
     const grade=norm(getCell(row,map.grade));
     const branch=norm(getCell(row,map.branch));
@@ -478,10 +448,11 @@ function importTests(){
 
     const t=makeTest(st,teacher,lesson,topic,total,correct,wrong,blank,date);
     if(addTestUnique(t)) added++; else skip++;
-  }
+  });
 
-  saveDB();renderAll();
-  importTestResult.innerHTML=`${added} kayıt eklendi. ${skip} tekrar kayıt atlandı. ${bad} satır okunamadı.`;
+  saveDB();
+  renderAll();
+  importTestResult.innerHTML=`${added} kayıt eklendi. ${skip} tekrar kayıt atlandı. ${empty} boş/başlık satırı atlandı.`;
  });
 }
 
