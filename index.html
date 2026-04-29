@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prestij Takip Sistemi v23.7 Mini Test Excel Entegre</title>
+<title>Prestij Takip Sistemi v23.8 Mini Test Excel Entegre</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{
@@ -53,7 +53,7 @@ th{background:#f4f9ff;color:#41556b}
 </head>
 <body>
 <header>
-  <h1>👑 Prestij Takip Sistemi v23.7 Mini Test Excel Entegre</h1>
+  <h1>👑 Prestij Takip Sistemi v23.8 Mini Test Excel Entegre</h1>
   <p>Kitap2.xlsx mini test verileri sisteme gömülü: 112 öğrenci, 1004 mini test</p>
 </header>
 
@@ -685,7 +685,7 @@ function importExams(){
    rows.forEach(row=>{
     const joined = row.map(x => norm(x).toLowerCase()).join(" ");
     if(!joined.trim()){ skipped++; return; }
-    if(joined.includes("öğrenci") || joined.includes("ogrenci") || joined.includes("deneme")){ skipped++; return; }
+    if(joined.includes("öğrenci") || joined.includes("ogrenci")){ skipped++; return; }
 
     // A Tarih, B Öğrenci, C Sınıf, D Şube, E Deneme,
     // F Türkçe, G Matematik, H Fen, I Sosyal, J İngilizce
